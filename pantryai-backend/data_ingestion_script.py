@@ -33,14 +33,12 @@ def clean_ingredients(ingredients_list):
                 cleaned.append(cleaned_ingredient)
     return cleaned
 
-
 def ingest_recipes_and_build_index():
     logger.info("Starting recipe ingestion and FAISS index building...")
 
+    # 1. Load all recipe JSON files
     all_recipes = []
     json_files = ["recipes.json", "inspiration.json", "baking.json", "health.json", "budget.json"]
-
-    # Load all recipe JSON files
     for filename in json_files:
         filepath = os.path.join(DATA_DIR, filename)
         if not os.path.exists(filepath):
@@ -58,42 +56,53 @@ def ingest_recipes_and_build_index():
         logger.error("No recipes loaded. Exiting ingestion.")
         return
 
+    # Prepare containers
     embeddings = []
     faiss_idx_to_recipe_id_map = []
     recipes_for_db = []
 
+    # Filter out any recipes missing id or name
     valid_recipes = [r for r in all_recipes if r.get('id') and r.get('name')]
     logger.info(f"Processing {len(valid_recipes)} valid recipes for embedding and database insertion.")
 
     for i, recipe in enumerate(valid_recipes):
         recipe_id = recipe['id']
-
-        # --- Populate cleaned_ingredients_list using parse_ingredient_name ---
-        parsed_ingredient_names = []
         original_ingredients_list = recipe.get('ingredients', [])
-        for item in original_ingredients_list:
-            if isinstance(item, str):
-                cleaned_name = parse_ingredient_name(item) # Use the shared cleaning function
-                if cleaned_name:
-                    parsed_ingredient_names.append(cleaned_name)
-            else:
-                logger.warning(f"Ingredient item in recipe {recipe_id} is not a string during ingestion: {item}. Skipping.")
 
-        # Remove duplicates and sort for consistency in the search list
-        recipe['cleaned_ingredients_list'] = sorted(list(set(parsed_ingredient_names)))
-        # --- END IMPORTANT ---
+        # --- Build cleaned_ingredients_list with phrase- and token-level keys, preserving order ---
+        seen = {}  # ordered dict by insertion order
+        for raw in original_ingredients_list:
+            if not isinstance(raw, str):
+                logger.warning(f"Ingredient item in recipe {recipe_id} is not a string: {raw}")
+                continue
 
+            cleaned = parse_ingredient_name(raw)
+            if not cleaned:
+                continue
 
-        # Clean ingredients for embedding text (can be different from search keys)
+            # Keep the full cleaned phrase
+            seen[cleaned] = None
+            # Also split into individual tokens
+            for tok in cleaned.split():
+                seen[tok] = None
+
+        # Assign back as list in original-discovered order (deduped)
+        recipe['cleaned_ingredients_list'] = list(seen)
+        # --- End cleaned_ingredients_list population ---
+
+        # Clean for embedding text (may differ from list used for search)
         recipe['cleaned_ingredients'] = clean_ingredients(original_ingredients_list)
 
+        # Generate embedding
         text_for_embedding = create_recipe_text_for_embedding(recipe)
         embedding = generate_text_embedding(text_for_embedding)
 
+        # Only include valid embeddings
         if embedding and len(embedding) == 768:
             embeddings.append(embedding)
             faiss_idx_to_recipe_id_map.append(recipe_id)
 
+            # Prepare DB record
             db_entry = {
                 "id": recipe_id,
                 "url": recipe.get('url'),
@@ -111,7 +120,8 @@ def ingest_recipes_and_build_index():
                 "subcategory": recipe.get('subcategory'),
                 "dish_type": recipe.get('dish_type'),
                 "maincategory": recipe.get('maincategory'),
-                "cleaned_ingredients_list": recipe.get('cleaned_ingredients_list') # Populate this column
+                # include our new column
+                "cleaned_ingredients_list": recipe.get('cleaned_ingredients_list')
             }
             recipes_for_db.append(db_entry)
         else:
@@ -120,36 +130,40 @@ def ingest_recipes_and_build_index():
         if (i + 1) % 5 == 0:
             logger.info(f"Processed {i + 1}/{len(valid_recipes)} recipes...")
 
+    # Ensure we have embeddings before proceeding
     if not embeddings:
         logger.error("No valid embeddings generated. Cannot build FAISS index or insert into Supabase.")
         return
 
+    # 2. Build FAISS index
     embeddings_np = np.array(embeddings, dtype="float32")
-
-    d = embeddings_np.shape[1]
-    index = faiss.IndexFlatL2(d)
+    dimension = embeddings_np.shape[1]
+    index = faiss.IndexFlatL2(dimension)
     index.add(embeddings_np)
     faiss.write_index(index, FAISS_INDEX_PATH)
     logger.info(f"FAISS index built and saved to {FAISS_INDEX_PATH} with {index.ntotal} vectors.")
 
+    # Save ID map
     with open(FAISS_ID_MAP_PATH, 'w') as f:
         json.dump(faiss_idx_to_recipe_id_map, f)
     logger.info(f"FAISS ID map saved to {FAISS_ID_MAP_PATH}.")
 
+    # 3. Upsert into Supabase
     logger.info(f"Attempting to insert {len(recipes_for_db)} recipes into Supabase 'recipes' table.")
     batch_size = 500
-    for i in range(0, len(recipes_for_db), batch_size):
-        batch = recipes_for_db[i:i + batch_size]
+    for start in range(0, len(recipes_for_db), batch_size):
+        batch = recipes_for_db[start:start + batch_size]
         try:
             res = supabase.table('recipes').upsert(batch, on_conflict='id').execute()
             if res.data:
-                logger.info(f"Successfully inserted/updated {len(res.data)} recipes (batch {i//batch_size + 1}).")
+                logger.info(f"Successfully inserted/updated {len(res.data)} recipes (batch {start//batch_size + 1}).")
             elif res.error:
-                logger.error(f"Supabase insertion/update error for batch {i//batch_size + 1}: {res.error}")
+                logger.error(f"Supabase insertion/update error for batch {start//batch_size + 1}: {res.error}")
         except Exception as e:
-            logger.error(f"General error during Supabase batch insertion/update {i//batch_size + 1}: {e}", exc_info=True)
+            logger.error(f"General error during Supabase batch insertion/update {start//batch_size + 1}: {e}", exc_info=True)
 
     logger.info("Recipe ingestion and FAISS index building complete.")
+
 
 if __name__ == "__main__":
     # BEFORE RUNNING THIS:
