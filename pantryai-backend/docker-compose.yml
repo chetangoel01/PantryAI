@@ -1,0 +1,13 @@
+services:
+  api:
+    build: .
+    ports:
+      - "5001:5000"
+    environment:
+      FLASK_DEBUG: "${FLASK_DEBUG}"
+      GOOGLE_API_KEY: "${GOOGLE_API_KEY}"
+      SUPABASE_URL: "${SUPABASE_URL}"
+      SUPABASE_KEY: "${SUPABASE_KEY}"
+      # no FAISS_INDEX_PATH here—let Config.py fall back to "recipes.index"
+    volumes:
+      - .:/app
