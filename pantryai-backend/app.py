@@ -1,8 +1,10 @@
 from flask import Flask, jsonify
 from routes.recipes import recipes_bp
 from utils.logger import logger
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 # Register blueprints
 app.register_blueprint(recipes_bp)
