@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://pantryai.onrender.com'; // Change this to your backend URL
+// const API_BASE_URL = 'https://pantryai.onrender.com'; // Change this to your backend URL
+// const API_BASE_URL = 'http://127.0.0.1:5001';
+const API_BASE_URL = 'https://8f42-2603-7000-2df0-78f0-88ac-4425-fcbf-5bbc.ngrok-free.app';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
@@ -23,6 +25,7 @@ export interface PantryItem {
     notes?: string;
     is_opened: boolean;
     added_at: string;
+    image_url?: string;
 }
 
 export interface Recipe {
@@ -130,6 +133,26 @@ export const recipesApi = {
             return response.data;
         } catch (error) {
             console.error('Error searching recipes:', error);
+            throw error;
+        }
+    },
+};
+
+export const scanApi = {
+    scanImage: async (parsedText: string[]): Promise<{ parsed_items: PantryItem[] }> => {
+        try {
+            console.log('Sending parsed text to scan API...');
+            const apiResponse = await api.post('/scan', {
+                parsed_text: parsedText.join('\n')
+            });
+            console.log('Scan API response:', apiResponse.data);
+            return apiResponse.data;
+        } catch (error: any) {
+            console.error('Error scanning image:', error);
+            if (error.response) {
+                console.error('API error response:', error.response.data);
+                throw new Error(error.response.data.error || 'Failed to process text');
+            }
             throw error;
         }
     },

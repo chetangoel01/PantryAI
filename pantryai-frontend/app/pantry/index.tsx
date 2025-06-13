@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Image, Dimensions, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { RootTabParamList } from '../_layout';
@@ -13,44 +13,77 @@ const CARD_WIDTH = (width - 40) / 2; // 20px padding on each side, 20px gap betw
 
 const PantryScreen: React.FC = () => {
     const router = useRouter();
+    const params = useLocalSearchParams();
     const [items, setItems] = useState<PantryItem[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     const [refreshing, setRefreshing] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    const onRefresh = React.useCallback(async () => {
-        setRefreshing(true);
-        try {
-            await fetchPantryItems();
-        } catch (error) {
-            console.error('Error refreshing pantry items:', error);
-            setError('Failed to refresh pantry items');
-        } finally {
-            setRefreshing(false);
-        }
+    useEffect(() => {
+        fetchItems();
     }, []);
 
-    const fetchPantryItems = async () => {
+    useEffect(() => {
+        // Handle scanned items if they exist in params
+        if (params.scannedItems) {
+            try {
+                const scannedItems = JSON.parse(params.scannedItems as string) as PantryItem[];
+                Alert.alert(
+                    'Scanned Items',
+                    `Found ${scannedItems.length} items. Would you like to add them to your pantry?`,
+                    [
+                        {
+                            text: 'Cancel',
+                            style: 'cancel',
+                        },
+                        {
+                            text: 'Add Items',
+                            onPress: async () => {
+                                try {
+                                    const result = await pantryApi.confirmAddItems(scannedItems);
+                                    setItems(prevItems => [...prevItems, ...result.inserted]);
+                                    Alert.alert('Success', 'Items added to pantry successfully!');
+                                } catch (error) {
+                                    console.error('Error adding scanned items:', error);
+                                    Alert.alert('Error', 'Failed to add items to pantry. Please try again.');
+                                }
+                            },
+                        },
+                    ]
+                );
+            } catch (error) {
+                console.error('Error parsing scanned items:', error);
+            }
+        }
+    }, [params.scannedItems]);
+
+    const fetchItems = async () => {
         try {
             setLoading(true);
-            const response = await pantryApi.getAllItems();
-            setItems(response);
             setError(null);
+            const data = await pantryApi.getAllItems();
+            setItems(data);
         } catch (err) {
             console.error('Error fetching pantry items:', err);
-            setError('Failed to load pantry items. Please try again later.');
-            setItems([]);
+            setError('Failed to load pantry items. Please try again.');
         } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => {
-        fetchPantryItems();
+    const onRefresh = React.useCallback(async () => {
+        setRefreshing(true);
+        try {
+            await fetchItems();
+        } catch (error) {
+            console.error('Error refreshing data:', error);
+        } finally {
+            setRefreshing(false);
+        }
     }, []);
 
     const renderContent = () => {
-        if (loading && !refreshing) {
+        if (loading) {
             return (
                 <View style={styles.centerContainer}>
                     <ActivityIndicator size="large" color="#4CAF50" />
@@ -62,7 +95,7 @@ const PantryScreen: React.FC = () => {
             return (
                 <View style={styles.centerContainer}>
                     <Text style={styles.errorText}>{error}</Text>
-                    <TouchableOpacity style={styles.retryButton} onPress={fetchPantryItems}>
+                    <TouchableOpacity style={styles.retryButton} onPress={fetchItems}>
                         <Text style={styles.retryButtonText}>Retry</Text>
                     </TouchableOpacity>
                 </View>
@@ -79,7 +112,7 @@ const PantryScreen: React.FC = () => {
         }
 
         return (
-            <ScrollView 
+            <ScrollView
                 style={styles.container}
                 refreshControl={
                     <RefreshControl
@@ -92,44 +125,29 @@ const PantryScreen: React.FC = () => {
             >
                 <View style={styles.gridContainer}>
                     {items.map((item) => (
-                        <TouchableOpacity 
-                            key={item.id} 
+                        <TouchableOpacity
+                            key={item.id}
                             style={styles.card}
-                            onPress={() => {
-                                Alert.alert(
-                                    'View Item',
-                                    `Would you like to view details for ${item.name}?`,
-                                    [
-                                        {
-                                            text: 'Cancel',
-                                            style: 'cancel'
-                                        },
-                                        {
-                                            text: 'View',
-                                            onPress: () => {
-                                                console.log('Navigating to item:', item.id);
-                                                router.push(`/pantry/${item.id}`);
-                                            }
-                                        }
-                                    ]
-                                );
-                            }}
+                            onPress={() => router.push(`/pantry/${item.id}`)}
                         >
-                            <Image 
-                                source={require('../../assets/placeholder_food.jpg')}
-                                style={styles.image}
-                            />
+                            {item.image_url && (
+                                <Image
+                                    source={{ uri: item.image_url }}
+                                    style={styles.image}
+                                    resizeMode="cover"
+                                />
+                            )}
                             <View style={styles.cardContent}>
-                                <Text style={styles.itemName} numberOfLines={1}>{item.name}</Text>
-                                <Text style={styles.itemDetails} numberOfLines={1}>
+                                <Text style={styles.itemName}>{item.name}</Text>
+                                <Text style={styles.itemDetails}>
                                     {item.quantity} {item.unit}
                                 </Text>
                                 <Text style={styles.category}>{item.category}</Text>
                                 {item.expiry && (
                                     <View style={styles.expiryContainer}>
-                                        <Ionicons name="time-outline" size={14} color="#D32F2F" />
+                                        <Ionicons name="time-outline" size={16} color="#D32F2F" />
                                         <Text style={styles.expiryDate}>
-                                            {new Date(item.expiry).toLocaleDateString()}
+                                            Expires: {new Date(item.expiry).toLocaleDateString()}
                                         </Text>
                                     </View>
                                 )}

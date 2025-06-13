@@ -4,7 +4,6 @@ import {
   CameraView,
   CameraType,
   useCameraPermissions,
-  TakePictureOptions,
 } from 'expo-camera';
 import {
   View,
@@ -12,15 +11,25 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
+import { useRouter } from 'expo-router';
+import { scanApi } from '../services/api';
+import TextRecognition from 'react-native-text-recognition';
+
+import * as FileSystem from 'expo-file-system'; // needed to handle paths properly
+
 
 export default function CameraScreen() {
+  const router = useRouter();
   // camera facing state
   const [facing, setFacing] = useState<CameraType>('back');
   // permission hook
   const [permission, requestPermission] = useCameraPermissions();
   // ref to the CameraView instance
   const cameraRef = useRef<CameraView>(null);
+  // loading state
+  const [isLoading, setIsLoading] = useState(false);
 
   // while permissions are loading
   if (!permission) {
@@ -50,22 +59,61 @@ export default function CameraScreen() {
 
   // toggle front/back
   const toggleCameraFacing = () => {
+    console.log('Toggling camera facing');
     setFacing((current) => (current === 'back' ? 'front' : 'back'));
   };
 
-  // example: take a picture and log the URI
+  // take a picture and process it
   const snapPhoto = async () => {
     if (!cameraRef.current) return;
+    // adding a check for whether text recognition is working
     try {
-      const photo = await cameraRef.current.takePictureAsync(
-        {} as TakePictureOptions
+      console.log('Starting photo capture...');
+      setIsLoading(true);
+  
+      const photo = await cameraRef.current.takePictureAsync({
+        skipProcessing: true, // helps performance
+      });
+      console.log('Photo captured:', photo.uri);
+
+      console.log('TextRecognition:1', TextRecognition);
+
+      TextRecognition.recognize(photo.uri)
+    .then(result => console.log('OCR result:', result))
+    .catch(err    => console.error('OCR error2:', err));
+
+
+      // OCR processing using on-device
+      const recognizedText = await TextRecognition.recognize(photo.uri);
+      console.log('Recognized text:', recognizedText);
+  
+      // Extract ingredients from text
+      const parsedItems = recognizedText
+        .map((line) => line.toLowerCase())
+        .filter((line) => line.length > 1); // Filter short garbage lines
+  
+      // Send parsed items to backend
+      const response = await scanApi.scanImage(parsedItems);
+      
+      // Navigate with parsed items
+      router.push({
+        pathname: '/pantry',
+        params: { scannedItems: JSON.stringify(response.parsed_items) },
+      });
+  
+    } catch (err: any) {
+      console.error('OCR processing error:', err);
+      Alert.alert(
+        'Error',
+        `Failed to extract text from image: ${err.message || err}`,
+        [{ text: 'OK' }]
       );
-      console.log('📸 Photo URI:', photo.uri);
-      // TODO: handle photo.uri (upload, display preview, etc.)
-    } catch (err) {
-      console.error('Failed to snap photo', err);
+    } finally {
+      console.log('snapPhoto finished');
+      setIsLoading(false);
     }
   };
+  
 
   return (
     <View style={styles.container}>
@@ -78,15 +126,21 @@ export default function CameraScreen() {
           <TouchableOpacity
             style={styles.button}
             onPress={toggleCameraFacing}
+            disabled={isLoading}
           >
             <Text style={styles.text}>Flip</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.button}
+            style={[styles.button, isLoading && styles.buttonDisabled]}
             onPress={snapPhoto}
+            disabled={isLoading}
           >
-            <Text style={styles.text}>Snap</Text>
+            {isLoading ? (
+              <ActivityIndicator color="#000" />
+            ) : (
+              <Text style={styles.text}>Snap</Text>
+            )}
           </TouchableOpacity>
         </View>
       </CameraView>
@@ -117,6 +171,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.6)',
     padding: 16,
     borderRadius: 50,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
   },
   text: { fontSize: 16, fontWeight: '600', color: '#000' },
 });
