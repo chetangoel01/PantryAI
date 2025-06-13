@@ -1,5 +1,7 @@
 from flask import Flask, jsonify
 from routes.recipes import recipes_bp
+from routes.pantry import pantry_bp
+from routes.scan import scan_bp
 from utils.logger import logger
 from flask_cors import CORS
 
@@ -7,7 +9,9 @@ app = Flask(__name__)
 CORS(app)
 
 # Register blueprints
-app.register_blueprint(recipes_bp)
+app.register_blueprint(recipes_bp)         # already /recipes/...
+app.register_blueprint(pantry_bp)          # exposes GET  /pantry
+app.register_blueprint(scan_bp)            # exposes POST /scan
 
 # Basic Flask routes
 @app.route('/')
