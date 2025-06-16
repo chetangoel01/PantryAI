@@ -1,15 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { pantryApi, PantryItem } from '../../services/api';
 
-type NewItemScreenNavigationProp = StackNavigationProp<any, 'new'>;
-
 const NewItemScreen: React.FC = () => {
-    const navigation = useNavigation<NewItemScreenNavigationProp>();
+    const router = useRouter();
     const [name, setName] = useState('');
     const [quantity, setQuantity] = useState('');
     const [unit, setUnit] = useState('');
@@ -38,7 +35,7 @@ const NewItemScreen: React.FC = () => {
 
             await pantryApi.addItem(itemData);
             Alert.alert('Success', 'Item added successfully', [
-                { text: 'OK', onPress: () => navigation.goBack() }
+                { text: 'OK', onPress: () => router.back() }
             ]);
         } catch (error) {
             Alert.alert('Error', 'Failed to add item. Please try again.');
@@ -55,7 +52,7 @@ const NewItemScreen: React.FC = () => {
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color="#333" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Add New Item</Text>

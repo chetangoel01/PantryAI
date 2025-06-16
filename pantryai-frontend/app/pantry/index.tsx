@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Image, Dimensions, Alert } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Image, Dimensions, Alert, Modal, TextInput } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { RootTabParamList } from '../_layout';
 import { pantryApi, PantryItem } from '../../services/api';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 type PantryScreenNavigationProp = BottomTabNavigationProp<RootTabParamList, 'pantry'>;
 
@@ -18,6 +19,19 @@ const PantryScreen: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [selectedItem, setSelectedItem] = useState<PantryItem | null>(null);
+    const [editedItem, setEditedItem] = useState<Partial<PantryItem>>({});
+    const [newItem, setNewItem] = useState({
+        name: '',
+        quantity: '',
+        unit: '',
+        category: '',
+    });
+    const [expiry, setExpiry] = useState<Date | null>(null);
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [datePickerMode, setDatePickerMode] = useState<'expiry' | 'purchase'>('expiry');
 
     useEffect(() => {
         fetchItems();
@@ -82,6 +96,100 @@ const PantryScreen: React.FC = () => {
         }
     }, []);
 
+    const handleAddItem = async () => {
+        if (!newItem.name || !newItem.quantity || !newItem.unit || !newItem.category) {
+            Alert.alert('Error', 'Please fill in all required fields');
+            return;
+        }
+
+        try {
+            const itemData: Omit<PantryItem, 'id'> = {
+                name: newItem.name,
+                quantity: parseFloat(newItem.quantity),
+                unit: newItem.unit,
+                category: newItem.category,
+                purchase_date: new Date().toISOString(),
+                location: 'pantry',
+                is_opened: false,
+                added_at: new Date().toISOString(),
+                expiry: expiry ? expiry.toISOString() : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            };
+
+            const addedItem = await pantryApi.addItem(itemData);
+            setItems(prevItems => [...prevItems, addedItem]);
+            setShowAddModal(false);
+            setNewItem({ name: '', quantity: '', unit: '', category: '' });
+            setExpiry(null);
+            Alert.alert('Success', 'Item added successfully');
+        } catch (error) {
+            Alert.alert('Error', 'Failed to add item. Please try again.');
+        }
+    };
+
+    const handleEditItem = async () => {
+        if (!selectedItem) return;
+
+        try {
+            console.log('Updating item with ID:', selectedItem.id);
+            const updatedItem = await pantryApi.updateItem(selectedItem.id, editedItem);
+            setItems(prevItems => 
+                prevItems.map(item => 
+                    item.id === selectedItem.id ? updatedItem : item
+                )
+            );
+            setShowEditModal(false);
+            setSelectedItem(null);
+            setEditedItem({});
+            Alert.alert('Success', 'Item updated successfully');
+        } catch (error) {
+            console.error('Error updating item:', error);
+            Alert.alert('Error', 'Failed to update item. Please try again.');
+        }
+    };
+
+    const handleDeleteItem = async () => {
+        if (!selectedItem) return;
+
+        Alert.alert(
+            'Delete Item',
+            `Are you sure you want to delete ${selectedItem.name}?`,
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel'
+                },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            console.log('Deleting item with ID:', selectedItem.id);
+                            await pantryApi.deleteItem(selectedItem.id);
+                            setItems(prevItems => prevItems.filter(item => item.id !== selectedItem.id));
+                            setShowEditModal(false);
+                            setSelectedItem(null);
+                            Alert.alert('Success', 'Item deleted successfully');
+                        } catch (error) {
+                            console.error('Error deleting item:', error);
+                            Alert.alert('Error', 'Failed to delete item. Please try again.');
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
+    const onDateChange = (event: any, selectedDate?: Date) => {
+        setShowDatePicker(false);
+        if (selectedDate) {
+            if (datePickerMode === 'expiry') {
+                setEditedItem(prev => ({ ...prev, expiry: selectedDate.toISOString() }));
+            } else {
+                setEditedItem(prev => ({ ...prev, purchase_date: selectedDate.toISOString() }));
+            }
+        }
+    };
+
     const renderContent = () => {
         if (loading) {
             return (
@@ -128,7 +236,18 @@ const PantryScreen: React.FC = () => {
                         <TouchableOpacity
                             key={item.id}
                             style={styles.card}
-                            onPress={() => router.push(`/pantry/${item.id}`)}
+                            onPress={() => {
+                                console.log('Item pressed:', {
+                                    id: item.id,
+                                    name: item.name,
+                                    quantity: item.quantity,
+                                    unit: item.unit,
+                                    category: item.category,
+                                    expiry: item.expiry
+                                });
+                                setSelectedItem(item);
+                                setShowEditModal(true);
+                            }}
                         >
                             {item.image_url && (
                                 <Image
@@ -159,36 +278,243 @@ const PantryScreen: React.FC = () => {
         );
     };
 
+    const renderEditModal = () => {
+        if (!selectedItem) return null;
+
+        return (
+            <Modal
+                visible={showEditModal}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => setShowEditModal(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Edit Item</Text>
+                            <TouchableOpacity onPress={() => setShowEditModal(false)}>
+                                <Ionicons name="close" size={24} color="#333" />
+                            </TouchableOpacity>
+                        </View>
+
+                        <ScrollView style={styles.modalBody}>
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Name *</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={editedItem.name || selectedItem.name}
+                                    onChangeText={(text) => setEditedItem(prev => ({ ...prev, name: text }))}
+                                    placeholder="Enter item name"
+                                />
+                            </View>
+
+                            <View style={styles.row}>
+                                <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
+                                    <Text style={styles.label}>Quantity *</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={editedItem.quantity?.toString() || selectedItem.quantity.toString()}
+                                        onChangeText={(text) => setEditedItem(prev => ({ ...prev, quantity: parseFloat(text) }))}
+                                        placeholder="Enter quantity"
+                                        keyboardType="numeric"
+                                    />
+                                </View>
+
+                                <View style={[styles.inputGroup, { flex: 1 }]}>
+                                    <Text style={styles.label}>Unit *</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={editedItem.unit || selectedItem.unit}
+                                        onChangeText={(text) => setEditedItem(prev => ({ ...prev, unit: text }))}
+                                        placeholder="e.g., kg, pcs"
+                                    />
+                                </View>
+                            </View>
+
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Category *</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={editedItem.category || selectedItem.category}
+                                    onChangeText={(text) => setEditedItem(prev => ({ ...prev, category: text }))}
+                                    placeholder="e.g., Fruits, Dairy"
+                                />
+                            </View>
+
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Expiry Date</Text>
+                                <TouchableOpacity
+                                    style={styles.dateButton}
+                                    onPress={() => {
+                                        setDatePickerMode('expiry');
+                                        setShowDatePicker(true);
+                                    }}
+                                >
+                                    <Text style={styles.dateButtonText}>
+                                        {editedItem.expiry 
+                                            ? new Date(editedItem.expiry).toLocaleDateString()
+                                            : selectedItem.expiry 
+                                                ? new Date(selectedItem.expiry).toLocaleDateString()
+                                                : 'Select date'}
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Purchase Date</Text>
+                                <TouchableOpacity
+                                    style={styles.dateButton}
+                                    onPress={() => {
+                                        setDatePickerMode('purchase');
+                                        setShowDatePicker(true);
+                                    }}
+                                >
+                                    <Text style={styles.dateButtonText}>
+                                        {editedItem.purchase_date 
+                                            ? new Date(editedItem.purchase_date).toLocaleDateString()
+                                            : selectedItem.purchase_date 
+                                                ? new Date(selectedItem.purchase_date).toLocaleDateString()
+                                                : 'Select date'}
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            {showDatePicker && (
+                                <DateTimePicker
+                                    value={datePickerMode === 'expiry' 
+                                        ? (editedItem.expiry ? new Date(editedItem.expiry) : new Date(selectedItem.expiry))
+                                        : (editedItem.purchase_date ? new Date(editedItem.purchase_date) : new Date(selectedItem.purchase_date))}
+                                    mode="date"
+                                    display="default"
+                                    onChange={onDateChange}
+                                    minimumDate={new Date()}
+                                />
+                            )}
+
+                            <View style={styles.buttonContainer}>
+                                <TouchableOpacity 
+                                    style={[styles.submitButton, { backgroundColor: '#4CAF50' }]} 
+                                    onPress={handleEditItem}
+                                >
+                                    <Text style={styles.submitButtonText}>Save Changes</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity 
+                                    style={[styles.submitButton, { backgroundColor: '#D32F2F', marginTop: 10 }]} 
+                                    onPress={handleDeleteItem}
+                                >
+                                    <Text style={styles.submitButtonText}>Delete Item</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </ScrollView>
+                    </View>
+                </View>
+            </Modal>
+        );
+    };
+
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>My Pantry</Text>
                 <TouchableOpacity 
                     style={styles.addButton}
-                    onPress={() => {
-                        Alert.alert(
-                            'Add New Item',
-                            'Would you like to add a new item to your pantry?',
-                            [
-                                {
-                                    text: 'Cancel',
-                                    style: 'cancel'
-                                },
-                                {
-                                    text: 'Add',
-                                    onPress: () => {
-                                        console.log('Navigating to new item form');
-                                        router.push('/pantry/new');
-                                    }
-                                }
-                            ]
-                        );
-                    }}
+                    onPress={() => setShowAddModal(true)}
                 >
                     <Ionicons name="add-circle-outline" size={24} color="#4CAF50" />
                 </TouchableOpacity>
             </View>
             {renderContent()}
+            {renderEditModal()}
+
+            <Modal
+                visible={showAddModal}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => setShowAddModal(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Add New Item</Text>
+                            <TouchableOpacity onPress={() => setShowAddModal(false)}>
+                                <Ionicons name="close" size={24} color="#333" />
+                            </TouchableOpacity>
+                        </View>
+
+                        <ScrollView style={styles.modalBody}>
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Name *</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={newItem.name}
+                                    onChangeText={(text) => setNewItem(prev => ({ ...prev, name: text }))}
+                                    placeholder="Enter item name"
+                                />
+                            </View>
+
+                            <View style={styles.row}>
+                                <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
+                                    <Text style={styles.label}>Quantity *</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={newItem.quantity}
+                                        onChangeText={(text) => setNewItem(prev => ({ ...prev, quantity: text }))}
+                                        placeholder="Enter quantity"
+                                        keyboardType="numeric"
+                                    />
+                                </View>
+
+                                <View style={[styles.inputGroup, { flex: 1 }]}>
+                                    <Text style={styles.label}>Unit *</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={newItem.unit}
+                                        onChangeText={(text) => setNewItem(prev => ({ ...prev, unit: text }))}
+                                        placeholder="e.g., kg, pcs"
+                                    />
+                                </View>
+                            </View>
+
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Category *</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={newItem.category}
+                                    onChangeText={(text) => setNewItem(prev => ({ ...prev, category: text }))}
+                                    placeholder="e.g., Fruits, Dairy"
+                                />
+                            </View>
+
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Expiry Date</Text>
+                                <TouchableOpacity
+                                    style={styles.dateButton}
+                                    onPress={() => setShowDatePicker(true)}
+                                >
+                                    <Text style={styles.dateButtonText}>
+                                        {expiry ? expiry.toLocaleDateString() : 'Select date'}
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            {showDatePicker && (
+                                <DateTimePicker
+                                    value={expiry || new Date()}
+                                    mode="date"
+                                    display="default"
+                                    onChange={onDateChange}
+                                    minimumDate={new Date()}
+                                />
+                            )}
+
+                            <TouchableOpacity style={styles.submitButton} onPress={handleAddItem}>
+                                <Text style={styles.submitButtonText}>Add Item</Text>
+                            </TouchableOpacity>
+                        </ScrollView>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 };
@@ -305,6 +631,81 @@ const styles = StyleSheet.create({
     subText: {
         fontSize: 16,
         color: '#666',
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContent: {
+        backgroundColor: 'white',
+        borderRadius: 12,
+        width: '90%',
+        maxHeight: '80%',
+        padding: 20,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+        paddingBottom: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: '600',
+        color: '#333',
+    },
+    modalBody: {
+        maxHeight: '80%',
+    },
+    inputGroup: {
+        marginBottom: 20,
+    },
+    row: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    label: {
+        fontSize: 16,
+        fontWeight: '500',
+        color: '#333',
+        marginBottom: 8,
+    },
+    input: {
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        borderRadius: 8,
+        padding: 12,
+        fontSize: 16,
+        backgroundColor: '#F8F8F8',
+    },
+    dateButton: {
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        borderRadius: 8,
+        padding: 12,
+        backgroundColor: '#F8F8F8',
+    },
+    dateButtonText: {
+        fontSize: 16,
+        color: '#333',
+    },
+    buttonContainer: {
+        marginTop: 20,
+    },
+    submitButton: {
+        padding: 16,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    submitButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
     },
 });
 

@@ -84,8 +84,8 @@ export const pantryApi = {
 
     addItem: async (item: Omit<PantryItem, 'id'>): Promise<PantryItem> => {
         try {
-            const response = await api.post('/api/pantry', item);
-            return response.data;
+            const response = await api.post('/pantry/confirm-add', { items: [item] });
+            return response.data.inserted[0];
         } catch (error) {
             console.error('Error adding pantry item:', error);
             throw error;
@@ -94,7 +94,7 @@ export const pantryApi = {
 
     updateItem: async (id: string, item: Partial<PantryItem>): Promise<PantryItem> => {
         try {
-            const response = await api.put(`/api/pantry/${id}`, item);
+            const response = await api.put(`/pantry/${id}`, item);
             return response.data;
         } catch (error) {
             console.error('Error updating pantry item:', error);
@@ -104,7 +104,10 @@ export const pantryApi = {
 
     deleteItem: async (id: string): Promise<void> => {
         try {
-            await api.delete(`/api/pantry/${id}`);
+            console.log('Attempting to delete item with ID:', id);
+            const response = await api.delete(`/pantry/${id}`);
+            console.log('Delete response:', response.data);
+            return response.data;
         } catch (error) {
             console.error('Error deleting pantry item:', error);
             throw error;
@@ -141,7 +144,6 @@ export const recipesApi = {
 export const scanApi = {
     scanImage: async (parsedText: string[]): Promise<{ parsed_items: PantryItem[] }> => {
         try {
-            console.log('Sending parsed text to scan API...');
             const apiResponse = await api.post('/scan', {
                 parsed_text: parsedText.join('\n')
             });

@@ -14,7 +14,7 @@ const QuickActionCard = ({ icon, title, onPress }: { icon: string; title: string
 
 const HomeScreen: React.FC = () => {
     const router = useRouter();
-    const [pantryCount, setPantryCount] = useState(0);
+    const [pantryCount, setPantryCount] = useState<number>(0);
     const [suggestedRecipes, setSuggestedRecipes] = useState<Recipe[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -41,10 +41,12 @@ const HomeScreen: React.FC = () => {
                 pantryApi.getAllItems(),
                 recipesApi.matchRecipes(3)
             ]);
-            setPantryCount(pantryItems.length);
-            setSuggestedRecipes(recipes.matched_recipes);
+            setPantryCount(pantryItems?.length || 0);
+            setSuggestedRecipes(recipes?.matched_recipes || []);
         } catch (error) {
             console.error('Error fetching data:', error);
+            setPantryCount(0);
+            setSuggestedRecipes([]);
         } finally {
             setLoading(false);
         }
