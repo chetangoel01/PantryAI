@@ -338,7 +338,7 @@ export default function CameraScreen() {
                     <TouchableOpacity
                       style={styles.dateInput}
                       onPress={() => {
-                        console.log('Expiry date pressed');
+                        // console.log('Expiry date pressed');
                         showDatePickerModal('expiry');
                       }}
                     >
