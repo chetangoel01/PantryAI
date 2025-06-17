@@ -4,6 +4,7 @@ import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Ima
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { pantryApi, recipesApi, Recipe } from '../../services/api';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import 'react-native-get-random-values';
 
 
@@ -16,6 +17,7 @@ const QuickActionCard = ({ icon, title, onPress }: { icon: string; title: string
 
 const HomeScreen: React.FC = () => {
     const router = useRouter();
+    const insets = useSafeAreaInsets();
     const [pantryCount, setPantryCount] = useState<number>(0);
     const [suggestedRecipes, setSuggestedRecipes] = useState<Recipe[]>([]);
     const [loading, setLoading] = useState(true);
@@ -73,8 +75,12 @@ const HomeScreen: React.FC = () => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
+            <View style={[styles.header, { paddingTop: insets.top }]}>
+                <Text style={styles.headerTitle}>Welcome to PantryAI</Text>
+                <Text style={styles.subtitle}>Your Personal Kitchen Assistant</Text>
+            </View>
             <ScrollView 
-                style={styles.container}
+                style={[styles.container, { paddingTop: 40+insets.top }]}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
@@ -84,11 +90,6 @@ const HomeScreen: React.FC = () => {
                     />
                 }
             >
-                <View style={styles.header}>
-                    <Text style={styles.headerTitle}>Welcome to PantryAI</Text>
-                    <Text style={styles.subtitle}>Your Personal Kitchen Assistant</Text>
-                </View>
-
                 {/* Quick Actions */}
                 <View style={styles.quickActions}>
                     <QuickActionCard
@@ -147,11 +148,14 @@ const HomeScreen: React.FC = () => {
                             style={styles.recipeCard}
                             onPress={() => router.push({
                                 pathname: '/recipes/[recipeId]',
-                                params: { recipeId: recipe.id.toString() }
+                                params: { 
+                                    recipeId: recipe.id.toString(),
+                                    recipe: JSON.stringify(recipe)
+                                }
                             })}
                         >
                             <Image
-                                source={recipe.url ? { uri: recipe.url } : require('../../assets/placeholder_recipe.jpg')}
+                                source={recipe.image_url ? { uri: recipe.image_url } : require('../../assets/placeholder_recipe.jpg')}
                                 style={styles.recipeImage}
                             />
                             <View style={styles.recipeInfo}>
@@ -177,12 +181,18 @@ const styles = StyleSheet.create({
     },
     container: {
         flex: 1,
+        paddingTop: 100,
     },
     header: {
         padding: 20,
         backgroundColor: '#fff',
         borderBottomWidth: 1,
         borderBottomColor: '#E0E0E0',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
     },
     headerTitle: {
         fontSize: 28,

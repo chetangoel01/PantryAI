@@ -5,10 +5,18 @@ from datetime import datetime, timedelta # Import these for date handling
 
 pantry_bp = Blueprint('pantry', __name__)
 
+def get_device_id():
+    device_id = request.headers.get("X-Device-ID")
+    if not device_id:
+        raise ValueError("Missing X-Device-ID header")
+    return device_id
+
+
 @pantry_bp.route('/pantry', methods=['GET'])
 def list_pantry():
     try:
-        res = supabase.table('pantry').select('*').execute()
+        device_id = get_device_id()
+        res = supabase.table('pantry').select('*').eq('device_id', device_id).execute()
         return jsonify(res.data), 200
     except Exception as e:
         logger.error("Error fetching pantry", exc_info=e)
@@ -34,8 +42,8 @@ def update_pantry_item(item_id):
             except ValueError:
                 return jsonify(error="Invalid purchase date format"), 400
 
-        # Update the item
-        res = supabase.table('pantry').update(data).eq('id', item_id).execute()
+        device_id = get_device_id()
+        res = supabase.table('pantry').update(data).eq('id', item_id).eq('device_id', device_id).execute()
         
         if not res.data:
             return jsonify(error="Item not found"), 404
@@ -50,14 +58,14 @@ def delete_pantry_item(item_id):
     try:
         logger.info(f"Attempting to delete pantry item with ID: {item_id}")
         
-        # First check if the item exists
-        check = supabase.table('pantry').select('id').eq('id', item_id).execute()
+        device_id = get_device_id()
+        check = supabase.table('pantry').select('id').eq('id', item_id).eq('device_id', device_id).execute()
         if not check.data:
             logger.warning(f"Item not found for deletion: {item_id}")
             return jsonify(error="Item not found"), 404
 
         # Perform the deletion
-        res = supabase.table('pantry').delete().eq('id', item_id).execute()
+        res = supabase.table('pantry').delete().eq('id', item_id).eq('device_id', device_id).execute()
         
         if not res.data:
             logger.error(f"Deletion failed for item {item_id}: No data returned")
@@ -77,6 +85,7 @@ def confirm_add_items():
     Expects a JSON payload with a list of items to insert.
     """
     data = request.get_json()
+    device_id = get_device_id()
 
     if not data or 'items' not in data or not isinstance(data['items'], list):
         return jsonify(error="Invalid request payload. Expected a list of 'items'."), 400
@@ -147,6 +156,7 @@ def confirm_add_items():
             "notes": item.get("notes"),
             "is_opened": is_opened,
             "added_at": item.get("added_at") or iso_now_z, # Use timestamp from frontend or current UTC
+            "device_id": device_id
         })
 
     if not processed_items_for_db:
@@ -167,8 +177,9 @@ def search_pantry():
         if not query:
             return jsonify([]), 200
 
-        # Search in the pantry table using case-insensitive contains
-        res = supabase.table('pantry').select('*').ilike('name', f'%{query}%').execute()
+        device_id = get_device_id()
+        res = supabase.table('pantry').select('*').ilike('name', f'%{query}%').eq('device_id', device_id).execute()
+
         return jsonify(res.data), 200
     except Exception as e:
         logger.error("Error searching pantry", exc_info=e)

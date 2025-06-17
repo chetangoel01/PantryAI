@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, SafeArea
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Recipe } from '../../services/api';
-console.log('mounted recipe detail  screen')
+// console.log('mounted recipe detail  screen')
 
 const getDifficultyColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
@@ -22,7 +22,7 @@ const RecipeDetailScreen: React.FC = () => {
     const router = useRouter();
     const params = useLocalSearchParams<{ recipeId: string, recipe: string }>();
     // const { recipeId } = useLocalSearchParams<{ recipeId: string }>();
-    console.log('Recipe Detail Params:', params);
+    // console.log('Recipe Detail Params:', params);
     
     let recipeData: Recipe | null = null;
     try {

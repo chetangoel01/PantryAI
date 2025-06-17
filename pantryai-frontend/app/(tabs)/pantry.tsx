@@ -6,7 +6,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { pantryApi, PantryItem } from '../../services/api';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import DropDownPicker from 'react-native-dropdown-picker';
-import { RootTabParamList } from '../_layout';
 
 const QUANTITY_TYPES = ['pcs', 'kg', 'g', 'l', 'ml', 'oz', 'lb'];
 
@@ -32,8 +31,6 @@ const GROCERY_CATEGORIES = [
   "Pet Supplies",
   "Other"
 ];
-
-type PantryScreenNavigationProp = BottomTabNavigationProp<RootTabParamList, 'pantry'>;
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 40) / 2; // 20px padding on each side, 20px gap between cards
@@ -175,7 +172,7 @@ const PantryScreen: React.FC = () => {
         if (!selectedItem) return;
 
         try {
-            console.log('Updating item with ID:', selectedItem.id);
+            // console.log('Updating item with ID:', selectedItem.id);
             const updatedItem = await pantryApi.updateItem(selectedItem.id, editedItem);
             setItems(prevItems => 
                 prevItems.map(item => 
@@ -208,7 +205,7 @@ const PantryScreen: React.FC = () => {
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            console.log('Deleting item with ID:', selectedItem.id);
+                            // console.log('Deleting item with ID:', selectedItem.id);
                             await pantryApi.deleteItem(selectedItem.id);
                             setItems(prevItems => prevItems.filter(item => item.id !== selectedItem.id));
                             setShowEditModal(false);
@@ -301,14 +298,14 @@ const PantryScreen: React.FC = () => {
                     <TouchableOpacity
                         style={styles.card}
                         onPress={() => {
-                            console.log('Item pressed:', {
-                                id: item.id,
-                                name: item.name,
-                                quantity: item.quantity,
-                                unit: item.unit,
-                                category: item.category,
-                                expiry: item.expiry
-                            });
+                            // console.log('Item pressed:', {
+                            //     id: item.id,
+                            //     name: item.name,
+                            //     quantity: item.quantity,
+                            //     unit: item.unit,
+                            //     category: item.category,
+                            //     expiry: item.expiry
+                            // });
                             setSelectedItem(item);
                             setShowEditModal(true);
                         }}

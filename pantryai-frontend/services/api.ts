@@ -117,9 +117,9 @@ export const pantryApi = {
 
     deleteItem: async (id: string): Promise<void> => {
         try {
-            console.log('Attempting to delete item with ID:', id);
+            // console.log('Attempting to delete item with ID:', id);
             const response = await api.delete(`/pantry/${id}`);
-            console.log('Delete response:', response.data);
+            // console.log('Delete response:', response.data);
             return response.data;
         } catch (error) {
             console.error('Error deleting pantry item:', error);
@@ -160,7 +160,7 @@ export const scanApi = {
             const apiResponse = await api.post('/scan', {
                 parsed_text: parsedText.join('\n')
             });
-            console.log('Scan API response:', apiResponse.data);
+            // console.log('Scan API response:', apiResponse.data);
             return apiResponse.data;
         } catch (error: any) {
             console.error('Error scanning image:', error);

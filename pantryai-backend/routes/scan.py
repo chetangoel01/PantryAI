@@ -4,7 +4,7 @@ from flask import Blueprint, request, jsonify
 from parsers import parse_receipt_google, parse_items
 from db import supabase
 from utils.logger import logger
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 scan_bp = Blueprint('scan', __name__)
 
@@ -30,7 +30,7 @@ def scan_receipt():
                 return jsonify(error=f"Failed to parse receipt: {fallback_e}"), 500
 
         # Clean and enrich for display/preparation, but DO NOT INSERT YET
-        now = datetime.now(datetime.UTC)
+        now = datetime.now(timezone.utc)
         today = now.date().isoformat()
         iso_now = now.isoformat() + "Z" # Ensure ISO 8601 with Z for UTC
         formatted_for_frontend = []

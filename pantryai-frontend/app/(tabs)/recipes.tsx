@@ -7,6 +7,7 @@ import RecipeCard from '../../components/RecipeCard';
 import { useRouter } from 'expo-router';
 import { recipesApi, Recipe, RecipeResponse } from '../../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import OptionsModal from '../../components/OptionsModal';
 
 const RECIPES_PER_PAGE = 10;
 const INITIAL_LOAD_COUNT = 30;
@@ -22,12 +23,14 @@ const RecipesScreen: React.FC = () => {
     const [hasMore, setHasMore] = useState(true);
     const [lastFetchTime, setLastFetchTime] = useState<number>(0);
     const [refreshing, setRefreshing] = useState(false);
-    const [viewMode, setViewMode] = useState<'grid' | 'list' | 'compact'>('grid');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [searchQuery, setSearchQuery] = useState('');
     const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
     const [searchResults, setSearchResults] = useState<Recipe[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [allRecipes, setAllRecipes] = useState<Recipe[]>([]);
+    const [showOptionsModal, setShowOptionsModal] = useState(false);
+    const [currentSort, setCurrentSort] = useState<'name' | 'ratings' | 'difficulty'>('name');
 
     useEffect(() => {
         loadInitialRecipes();
@@ -145,16 +148,44 @@ const RecipesScreen: React.FC = () => {
         setFilteredRecipes([]);
     };
 
-    const handleFilterPress = (filterType: string) => {
-        Alert.alert('Filter Clicked', `You clicked the ${filterType} filter.`);
+    const handleOptionsPress = () => {
+        setShowOptionsModal(true);
+    };
+
+    const handleViewModeChange = (mode: 'grid' | 'list') => {
+        setViewMode(mode);
+        setShowOptionsModal(false);
+    };
+
+    const handleSortChange = (sortBy: 'name' | 'ratings' | 'difficulty') => {
+        setCurrentSort(sortBy);
+        setShowOptionsModal(false);
+
+        const sortedRecipes = [...recipes].sort((a, b) => {
+            switch (sortBy) {
+                case 'name':
+                    return a.name.localeCompare(b.name);
+                case 'ratings':
+                    return b.ratings - a.ratings;
+                case 'difficulty':
+                    const difficultyOrder = { 'easy': 1, 'medium': 2, 'hard': 3 };
+                    return (difficultyOrder[a.difficulty.toLowerCase() as keyof typeof difficultyOrder] || 0) -
+                           (difficultyOrder[b.difficulty.toLowerCase() as keyof typeof difficultyOrder] || 0);
+                default:
+                    return 0;
+            }
+        });
+
+        setRecipes(sortedRecipes);
+        setAllRecipes(sortedRecipes);
     };
 
     const handleRecipeCardPress = (recipe: Recipe) => {
-        console.log('Recipe card pressed:', {
-            id: recipe.id,
-            name: recipe.name,
-            url: recipe.url
-        });
+        // console.log('Recipe card pressed:', {
+        //     id: recipe.id,
+        //     name: recipe.name,
+        //     url: recipe.url
+        // });
         router.push({
             pathname: '/recipes/[recipeId]',
             params: {
@@ -179,44 +210,10 @@ const RecipesScreen: React.FC = () => {
         }
     }, []);
 
-    const handleOptionsPress = () => {
-        Alert.alert(
-            'Options',
-            'Choose an option',
-            [
-                {
-                    text: 'View Options',
-                    onPress: () => {
-                        Alert.alert(
-                            'View Options',
-                            'Select view mode',
-                            [
-                                { text: 'Grid View', onPress: () => setViewMode('grid') },
-                                { text: 'List View', onPress: () => setViewMode('list') },
-                                { text: 'Compact View', onPress: () => setViewMode('compact') },
-                                { text: 'Cancel', style: 'cancel' }
-                            ]
-                        );
-                    }
-                },
-                {
-                    text: 'Sort',
-                    onPress: () => handleFilterPress('Sort')
-                },
-                {
-                    text: 'Dietary',
-                    onPress: () => handleFilterPress('Dietary')
-                },
-                {
-                    text: 'Cuisine',
-                    onPress: () => handleFilterPress('Cuisine')
-                },
-                {
-                    text: 'Cancel',
-                    style: 'cancel'
-                }
-            ]
-        );
+    const handleReset = () => {
+        setViewMode('grid');
+        setCurrentSort('name');
+        setShowOptionsModal(false);
     };
 
     const renderContent = () => {
@@ -287,7 +284,6 @@ const RecipesScreen: React.FC = () => {
                     styles.recipesContainer,
                     viewMode === 'grid' && styles.gridContainer,
                     viewMode === 'list' && styles.listContainer,
-                    viewMode === 'compact' && styles.compactContainer
                 ]}>
                     {displayedRecipes.map((recipe, index) => (
                         <RecipeCard
@@ -340,6 +336,15 @@ const RecipesScreen: React.FC = () => {
             </View>
 
             {renderContent()}
+            <OptionsModal
+                visible={showOptionsModal}
+                onClose={() => setShowOptionsModal(false)}
+                onViewModeChange={handleViewModeChange}
+                onSortChange={handleSortChange}
+                onReset={handleReset}
+                currentViewMode={viewMode}
+                currentSort={currentSort}
+            />
         </SafeAreaView>
     );
 };
@@ -473,9 +478,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     listContainer: {
-        flexDirection: 'column',
-    },
-    compactContainer: {
         flexDirection: 'column',
     },
     optionsButton: {

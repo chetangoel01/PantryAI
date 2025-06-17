@@ -5,9 +5,7 @@ import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import DropDownPicker from 'react-native-dropdown-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type {RootTabParamList}  from './_layout';
 
-type ListsScreenNavigationProp = BottomTabNavigationProp<RootTabParamList, 'lists'>;
 
 interface ShoppingItem {
   id: string;
@@ -20,7 +18,6 @@ interface ShoppingItem {
 const QUANTITY_TYPES = ['pcs', 'kg', 'g', 'l', 'ml', 'oz', 'lb'];
 
 const ListsScreen: React.FC = () => {
-  const navigation = useNavigation<ListsScreenNavigationProp>();
   const [items, setItems] = useState<ShoppingItem[]>([]);
   const [newItemName, setNewItemName] = useState('');
   const [newItemQuantity, setNewItemQuantity] = useState('1');
