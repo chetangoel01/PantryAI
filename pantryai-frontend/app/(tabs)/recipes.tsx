@@ -1,28 +1,18 @@
+// Please paste the contents of:
+// 1. app/(tabs)/recipes.tsx (your recipes list screen)
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Image, ActivityIndicator, Alert, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Image, ActivityIndicator, Alert, RefreshControl, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import RecipeCard from '../../components/RecipeCard';
-import { useNavigation } from 'expo-router';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { recipesApi, Recipe, RecipeResponse } from '../../services/api';
 import { useRouter } from 'expo-router';
+import { recipesApi, Recipe, RecipeResponse } from '../../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// Define the parameter list for your RecipesStack (must match _layout.tsx)
-type RecipesStackParamList = {
-    recipesMain: undefined;
-    recipeDetail: { recipeId: string };
-};
-
-// Type for the navigation prop
-type RecipesScreenNavigationProp = StackNavigationProp<RecipesStackParamList, 'recipesMain'>;
 
 const RECIPES_PER_PAGE = 10;
 const INITIAL_LOAD_COUNT = 30;
 const STORAGE_KEY = '@pantryai_recipes_cache';
 
 const RecipesScreen: React.FC = () => {
-    const navigation = useNavigation<RecipesScreenNavigationProp>();
     const router = useRouter();
     const [recipes, setRecipes] = useState<Recipe[]>([]);
     const [loading, setLoading] = useState(true);
@@ -32,6 +22,12 @@ const RecipesScreen: React.FC = () => {
     const [hasMore, setHasMore] = useState(true);
     const [lastFetchTime, setLastFetchTime] = useState<number>(0);
     const [refreshing, setRefreshing] = useState(false);
+    const [viewMode, setViewMode] = useState<'grid' | 'list' | 'compact'>('grid');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
+    const [searchResults, setSearchResults] = useState<Recipe[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [allRecipes, setAllRecipes] = useState<Recipe[]>([]);
 
     useEffect(() => {
         loadInitialRecipes();
@@ -50,6 +46,7 @@ const RecipesScreen: React.FC = () => {
                 // Use cache if it's less than 1 hour old
                 if (now - timestamp < 3600000) {
                     setRecipes(cachedRecipes);
+                    setAllRecipes(cachedRecipes);
                     setHasMore(cachedRecipes.length >= RECIPES_PER_PAGE);
                     setLoading(false);
                     return;
@@ -61,6 +58,7 @@ const RecipesScreen: React.FC = () => {
             
             if (response?.matched_recipes) {
                 setRecipes(response.matched_recipes);
+                setAllRecipes(response.matched_recipes);
                 setHasMore(response.matched_recipes.length >= RECIPES_PER_PAGE);
                 
                 // Cache the results
@@ -77,6 +75,7 @@ const RecipesScreen: React.FC = () => {
             console.error('Error fetching recipes:', err);
             setError('Failed to load recipes. Please try again later.');
             setRecipes([]);
+            setAllRecipes([]);
         } finally {
             setLoading(false);
         }
@@ -109,6 +108,7 @@ const RecipesScreen: React.FC = () => {
                 // Append new recipes to existing ones
                 const newRecipes = [...recipes, ...response.matched_recipes];
                 setRecipes(newRecipes);
+                setAllRecipes(newRecipes);
                 
                 // Update cache
                 await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({
@@ -124,8 +124,25 @@ const RecipesScreen: React.FC = () => {
         }
     };
 
-    const handleSearchPress = () => {
-        Alert.alert('Search Clicked', 'Implement search functionality here!');
+    const handleSearch = (query: string) => {
+        setSearchQuery(query);
+        if (query.trim().length > 0) {
+            const filtered = allRecipes.filter(recipe => 
+                recipe.name.toLowerCase().includes(query.toLowerCase()) ||
+                recipe.description.toLowerCase().includes(query.toLowerCase()) ||
+                recipe.ingredients.some(ingredient => 
+                    ingredient.toLowerCase().includes(query.toLowerCase())
+                )
+            );
+            setFilteredRecipes(filtered);
+        } else {
+            setFilteredRecipes([]);
+        }
+    };
+
+    const clearSearch = () => {
+        setSearchQuery('');
+        setFilteredRecipes([]);
     };
 
     const handleFilterPress = (filterType: string) => {
@@ -133,8 +150,18 @@ const RecipesScreen: React.FC = () => {
     };
 
     const handleRecipeCardPress = (recipe: Recipe) => {
-        console.log('Recipe card pressed:', recipe.id);
-        router.push(`/recipes/${recipe.id}`);
+        console.log('Recipe card pressed:', {
+            id: recipe.id,
+            name: recipe.name,
+            url: recipe.url
+        });
+        router.push({
+            pathname: '/recipes/[recipeId]',
+            params: {
+                recipeId: recipe.id,
+              recipe: JSON.stringify(recipe), // Optional: only needed if not fetching via ID
+            }
+          });
     };
 
     const onRefresh = React.useCallback(async () => {
@@ -151,6 +178,46 @@ const RecipesScreen: React.FC = () => {
             setRefreshing(false);
         }
     }, []);
+
+    const handleOptionsPress = () => {
+        Alert.alert(
+            'Options',
+            'Choose an option',
+            [
+                {
+                    text: 'View Options',
+                    onPress: () => {
+                        Alert.alert(
+                            'View Options',
+                            'Select view mode',
+                            [
+                                { text: 'Grid View', onPress: () => setViewMode('grid') },
+                                { text: 'List View', onPress: () => setViewMode('list') },
+                                { text: 'Compact View', onPress: () => setViewMode('compact') },
+                                { text: 'Cancel', style: 'cancel' }
+                            ]
+                        );
+                    }
+                },
+                {
+                    text: 'Sort',
+                    onPress: () => handleFilterPress('Sort')
+                },
+                {
+                    text: 'Dietary',
+                    onPress: () => handleFilterPress('Dietary')
+                },
+                {
+                    text: 'Cuisine',
+                    onPress: () => handleFilterPress('Cuisine')
+                },
+                {
+                    text: 'Cancel',
+                    style: 'cancel'
+                }
+            ]
+        );
+    };
 
     const renderContent = () => {
         if (loading) {
@@ -172,57 +239,74 @@ const RecipesScreen: React.FC = () => {
             );
         }
 
-        if (!Array.isArray(recipes) || recipes.length === 0) {
+        const recipesToDisplay = searchQuery.trim().length > 0 ? filteredRecipes : recipes;
+        const isSearchActive = searchQuery.trim().length > 0;
+
+        if (!Array.isArray(recipesToDisplay) || recipesToDisplay.length === 0) {
             return (
                 <View style={styles.centerContainer}>
-                    <Text style={styles.emptyText}>No recipes found</Text>
+                    <Text style={styles.emptyText}>
+                        {isSearchActive ? 'No matching recipes found' : 'No recipes found'}
+                    </Text>
                 </View>
             );
         }
 
-        const startIndex = (currentPage - 1) * RECIPES_PER_PAGE;
-        const endIndex = startIndex + RECIPES_PER_PAGE;
-        const displayedRecipes = recipes.slice(startIndex, endIndex);
+        // When search is active, show all filtered results without pagination
+        const displayedRecipes = isSearchActive ? recipesToDisplay : recipesToDisplay.slice(
+            (currentPage - 1) * RECIPES_PER_PAGE,
+            currentPage * RECIPES_PER_PAGE
+        );
 
         return (
             <ScrollView 
                 style={styles.trendingSection}
                 refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                        colors={['#4CAF50']}
-                        tintColor="#4CAF50"
-                    />
+                    !isSearchActive ? (
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={['#4CAF50']}
+                            tintColor="#4CAF50"
+                        />
+                    ) : undefined
                 }
                 onScroll={({ nativeEvent }) => {
-                    const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
-                    const paddingToBottom = 20;
-                    if (layoutMeasurement.height + contentOffset.y >= 
-                        contentSize.height - paddingToBottom) {
-                        handleLoadMore();
+                    if (!isSearchActive) {
+                        const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+                        const paddingToBottom = 20;
+                        if (layoutMeasurement.height + contentOffset.y >= 
+                            contentSize.height - paddingToBottom) {
+                            handleLoadMore();
+                        }
                     }
                 }}
                 scrollEventThrottle={400}
             >
-                <Text style={styles.sectionTitle}>Recommended Recipes</Text>
-                {displayedRecipes.map((recipe, index) => (
-                    <RecipeCard
-                        key={`${recipe.id}-${startIndex + index}`}
-                        id={recipe.id}
-                        title={recipe.name}
-                        difficulty={recipe.difficulty || 'Medium'}
-                        image={recipe.url ? { uri: recipe.url } : require('../../assets/placeholder_recipe.jpg')}
-                        onPress={() => handleRecipeCardPress(recipe)}
-                    />
-                ))}
-                {loadingMore && (
+                <View style={[
+                    styles.recipesContainer,
+                    viewMode === 'grid' && styles.gridContainer,
+                    viewMode === 'list' && styles.listContainer,
+                    viewMode === 'compact' && styles.compactContainer
+                ]}>
+                    {displayedRecipes.map((recipe, index) => (
+                        <RecipeCard
+                            key={`${recipe.id}-${index}`}
+                            id={recipe.id}
+                            title={recipe.name}
+                            difficulty={recipe.difficulty || 'Medium'}
+                            image={recipe.image_url ? { uri: recipe.image_url } : require('../../assets/placeholder_recipe.jpg')}
+                            onPress={() => handleRecipeCardPress(recipe)}
+                            viewMode={viewMode}
+                        />
+                    ))}
+                </View>
+                {loadingMore && !isSearchActive && (
                     <View style={styles.loadingMoreContainer}>
                         <ActivityIndicator size="small" color="#4CAF50" />
-                        <Text style={styles.loadingMoreText}>Loading more recipes...</Text>
                     </View>
                 )}
-                {!hasMore && recipes.length > 0 && (
+                {!hasMore && recipesToDisplay.length > 0 && !isSearchActive && (
                     <Text style={styles.noMoreText}>No more recipes to load</Text>
                 )}
             </ScrollView>
@@ -230,45 +314,41 @@ const RecipesScreen: React.FC = () => {
     };
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.safeArea}>
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Recipes</Text>
-                <TouchableOpacity onPress={() => Alert.alert('Options', 'Open options menu.')}>
-                    <Ionicons name="ellipsis-vertical" size={24} color="black" />
+                <TouchableOpacity onPress={handleOptionsPress} style={styles.optionsButton}>
+                    <Ionicons name="options-outline" size={24} color="#333" />
                 </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={styles.searchContainer} onPress={handleSearchPress}>
-                <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
-                <TextInput
-                    style={styles.searchInput}
-                    placeholder="Search recipes"
-                    placeholderTextColor="#888"
-                    editable={false}
-                />
-            </TouchableOpacity>
-
-            <View style={styles.filterContainer}>
-                <TouchableOpacity style={styles.filterButton} onPress={() => handleFilterPress('Sort')}>
-                    <Text style={styles.filterButtonText}>Sort</Text>
-                    <Ionicons name="chevron-down" size={16} color="black" style={styles.filterIcon} />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.filterButton} onPress={() => handleFilterPress('Dietary')}>
-                    <Text style={styles.filterButtonText}>Dietary</Text>
-                    <Ionicons name="chevron-down" size={16} color="black" style={styles.filterIcon} />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.filterButton} onPress={() => handleFilterPress('Cuisine')}>
-                    <Text style={styles.filterButtonText}>Cuisine</Text>
-                    <Ionicons name="chevron-down" size={16} color="black" style={styles.filterIcon} />
-                </TouchableOpacity>
+            <View style={styles.searchContainer}>
+                <View style={styles.searchInputContainer}>
+                    <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
+                    <TextInput
+                        style={styles.searchInput}
+                        placeholder="Search recipes..."
+                        value={searchQuery}
+                        onChangeText={handleSearch}
+                    />
+                    {searchQuery.length > 0 && (
+                        <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
+                            <Ionicons name="close-circle" size={20} color="#666" />
+                        </TouchableOpacity>
+                    )}
+                </View>
             </View>
 
             {renderContent()}
-        </View>
+        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+        backgroundColor: '#fff',
+    },
     container: {
         flex: 1,
         backgroundColor: '#fff',
@@ -286,21 +366,30 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     searchContainer: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        backgroundColor: '#fff',
+    },
+    searchInputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#f0f0f0',
-        borderRadius: 10,
-        marginHorizontal: 20,
-        paddingHorizontal: 15,
-        paddingVertical: 10,
-        marginBottom: 20,
-    },
-    searchIcon: {
-        marginRight: 10,
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
     },
     searchInput: {
         flex: 1,
+        height: 36,
         fontSize: 16,
+        color: '#333',
+        marginLeft: 8,
+    },
+    searchIcon: {
+        marginRight: 4,
+    },
+    clearButton: {
+        padding: 4,
     },
     filterContainer: {
         flexDirection: 'row',
@@ -374,6 +463,23 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         color: '#666',
         padding: 20,
+    },
+    recipesContainer: {
+        padding: 10,
+    },
+    gridContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+    },
+    listContainer: {
+        flexDirection: 'column',
+    },
+    compactContainer: {
+        flexDirection: 'column',
+    },
+    optionsButton: {
+        padding: 5,
     },
 });
 

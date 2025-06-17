@@ -5,7 +5,7 @@ import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import DropDownPicker from 'react-native-dropdown-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { RootTabParamList } from './_layout';
+import type {RootTabParamList}  from './_layout';
 
 type ListsScreenNavigationProp = BottomTabNavigationProp<RootTabParamList, 'lists'>;
 

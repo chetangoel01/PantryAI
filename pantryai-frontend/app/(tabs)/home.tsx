@@ -3,7 +3,9 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Image, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { pantryApi, recipesApi, Recipe } from '../services/api';
+import { pantryApi, recipesApi, Recipe } from '../../services/api';
+import 'react-native-get-random-values';
+
 
 const QuickActionCard = ({ icon, title, onPress }: { icon: string; title: string; onPress: () => void }) => (
     <TouchableOpacity style={styles.quickActionCard} onPress={onPress}>
@@ -149,7 +151,7 @@ const HomeScreen: React.FC = () => {
                             })}
                         >
                             <Image
-                                source={recipe.url ? { uri: recipe.url } : require('../assets/placeholder_recipe.jpg')}
+                                source={recipe.url ? { uri: recipe.url } : require('../../assets/placeholder_recipe.jpg')}
                                 style={styles.recipeImage}
                             />
                             <View style={styles.recipeInfo}>

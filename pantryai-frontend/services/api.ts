@@ -1,8 +1,9 @@
 import axios from 'axios';
+import { getDeviceId } from './getDeviceId';
 
 // const API_BASE_URL = 'https://pantryai.onrender.com'; // Change this to your backend URL
 // const API_BASE_URL = 'http://127.0.0.1:5001';
-const API_BASE_URL = 'https://8f42-2603-7000-2df0-78f0-88ac-4425-fcbf-5bbc.ngrok-free.app';
+const API_BASE_URL = 'https://16e5-2603-7000-2df0-78f0-8df7-7953-15e4-d1ca.ngrok-free.app';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
@@ -10,6 +11,17 @@ const api = axios.create({
         'Content-Type': 'application/json',
     },
 });
+
+// Automatically attach device_id to each request
+api.interceptors.request.use(
+    async (config) => {
+        const deviceId = await getDeviceId();
+        config.headers['X-Device-ID'] = deviceId;
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
 
 export interface PantryItem {
     id: string;
@@ -55,6 +67,7 @@ export interface Recipe {
         prep?: number;
         cook?: number;
     };
+    image_url: string;
 }
 
 export interface RecipeResponse {

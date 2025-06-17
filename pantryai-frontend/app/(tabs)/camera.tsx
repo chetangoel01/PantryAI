@@ -19,7 +19,7 @@ import {
 }
  from 'react-native';
 import { useRouter } from 'expo-router';
-import { scanApi, pantryApi } from '../services/api';
+import { scanApi, pantryApi } from '../../services/api';
 import TextRecognition from 'react-native-text-recognition';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';

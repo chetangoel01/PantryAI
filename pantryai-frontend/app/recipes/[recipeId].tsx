@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, SafeAreaView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Recipe } from '../../services/api';
+console.log('mounted recipe detail  screen')
 
 const getDifficultyColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
@@ -19,8 +20,16 @@ const getDifficultyColor = (difficulty: string) => {
 
 const RecipeDetailScreen: React.FC = () => {
     const router = useRouter();
-    const { recipe } = useLocalSearchParams<{ recipe: string }>();
-    const recipeData: Recipe = recipe ? JSON.parse(recipe) : null;
+    const params = useLocalSearchParams<{ recipeId: string, recipe: string }>();
+    // const { recipeId } = useLocalSearchParams<{ recipeId: string }>();
+    console.log('Recipe Detail Params:', params);
+    
+    let recipeData: Recipe | null = null;
+    try {
+        recipeData = params.recipe ? JSON.parse(params.recipe) : null;
+    } catch (error) {
+        console.error('Error parsing recipe data:', error);
+    }
 
     if (!recipeData) {
         return (
@@ -56,7 +65,7 @@ const RecipeDetailScreen: React.FC = () => {
     };
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.safeArea}>
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
@@ -117,11 +126,15 @@ const RecipeDetailScreen: React.FC = () => {
                     </TouchableOpacity>
                 )}
             </ScrollView>
-        </View>
+        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+        backgroundColor: '#fff',
+    },
     container: {
         flex: 1,
         backgroundColor: '#fff',
@@ -129,9 +142,8 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingTop: 50,
         paddingHorizontal: 20,
-        paddingBottom: 15,
+        paddingVertical: 15,
         borderBottomWidth: 1,
         borderBottomColor: '#eee',
     },
