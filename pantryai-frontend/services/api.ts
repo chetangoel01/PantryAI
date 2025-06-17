@@ -1,9 +1,7 @@
 import axios from 'axios';
 import { getDeviceId } from './getDeviceId';
 
-// const API_BASE_URL = 'https://pantryai.onrender.com'; // Change this to your backend URL
-// const API_BASE_URL = 'http://127.0.0.1:5001';
-const API_BASE_URL = 'https://16e5-2603-7000-2df0-78f0-8df7-7953-15e4-d1ca.ngrok-free.app';
+const API_BASE_URL = 'https://pantryai.onrender.com';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
