@@ -75,12 +75,11 @@ const HomeScreen: React.FC = () => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <View style={[styles.header, { paddingTop: insets.top }]}>
+            <View style={styles.header}>
                 <Text style={styles.headerTitle}>Welcome to PantryAI</Text>
-                <Text style={styles.subtitle}>Your Personal Kitchen Assistant</Text>
             </View>
             <ScrollView 
-                style={[styles.container, { paddingTop: 40+insets.top }]}
+                style={styles.container}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
@@ -181,28 +180,20 @@ const styles = StyleSheet.create({
     },
     container: {
         flex: 1,
-        paddingTop: 100,
     },
     header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         padding: 20,
         backgroundColor: '#fff',
         borderBottomWidth: 1,
         borderBottomColor: '#E0E0E0',
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 1000,
     },
     headerTitle: {
         fontSize: 28,
         fontWeight: 'bold',
         color: '#333',
-    },
-    subtitle: {
-        fontSize: 16,
-        color: '#666',
-        marginTop: 5,
     },
     quickActions: {
         flexDirection: 'row',

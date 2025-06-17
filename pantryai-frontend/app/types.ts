@@ -5,3 +5,5 @@ export type RootTabParamList = {
   lists: undefined;
   camera: undefined;
 }; 
+
+export default RootTabParamList; 

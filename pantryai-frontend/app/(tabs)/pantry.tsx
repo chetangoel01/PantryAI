@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { pantryApi, PantryItem } from '../../services/api';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import DropDownPicker from 'react-native-dropdown-picker';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const QUANTITY_TYPES = ['pcs', 'kg', 'g', 'l', 'ml', 'oz', 'lb'];
 
@@ -33,10 +34,19 @@ const GROCERY_CATEGORIES = [
 ];
 
 const { width } = Dimensions.get('window');
-const CARD_WIDTH = (width - 40) / 2; // 20px padding on each side, 20px gap between cards
+const CARD_WIDTH = (width - 48) / 2; // 16px padding on each side, 16px gap between cards
+
+const isExpiringSoon = (expiryDate: string): boolean => {
+    const today = new Date();
+    const expiry = new Date(expiryDate);
+    const diffTime = expiry.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 7 && diffDays >= 0;
+};
 
 const PantryScreen: React.FC = () => {
     const router = useRouter();
+    const insets = useSafeAreaInsets();
     const params = useLocalSearchParams();
     const [items, setItems] = useState<PantryItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -323,7 +333,7 @@ const PantryScreen: React.FC = () => {
                                 {item.quantity} {item.unit}
                             </Text>
                             <Text style={styles.category}>{item.category}</Text>
-                            {item.expiry && (
+                            {item.expiry && isExpiringSoon(item.expiry) && (
                                 <View style={styles.expiryContainer}>
                                     <Ionicons name="time-outline" size={16} color="#D32F2F" />
                                     <Text style={styles.expiryDate}>
@@ -683,11 +693,8 @@ const PantryScreen: React.FC = () => {
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>My Pantry</Text>
-                <TouchableOpacity 
-                    style={styles.addButton}
-                    onPress={() => setShowAddModal(true)}
-                >
+                <Text style={styles.headerTitle}>Pantry</Text>
+                <TouchableOpacity onPress={() => setShowAddModal(true)} style={styles.addButton}>
                     <Ionicons name="add-circle-outline" size={24} color="#4CAF50" />
                 </TouchableOpacity>
             </View>
@@ -703,6 +710,9 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#fff',
     },
+    container: {
+        flex: 1,
+    },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -711,7 +721,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderBottomWidth: 1,
         borderBottomColor: '#E0E0E0',
-        zIndex: 1,
     },
     headerTitle: {
         fontSize: 28,
@@ -720,20 +729,6 @@ const styles = StyleSheet.create({
     },
     addButton: {
         padding: 8,
-        zIndex: 9999,
-        backgroundColor: '#fff',
-        borderRadius: 20,
-        elevation: 2,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 1,
-        },
-        shadowOpacity: 0.2,
-        shadowRadius: 1.41,
-    },
-    container: {
-        flex: 1,
     },
     centerContainer: {
         flex: 1,
@@ -742,15 +737,16 @@ const styles = StyleSheet.create({
         padding: 20,
     },
     gridContainer: {
-        flexDirection: 'row',
-        padding: 10,
-        justifyContent: 'space-between',
+        flexDirection: 'column',
+        padding: 16,
+        justifyContent: 'flex-start',
+        gap: 8,
     },
     card: {
         width: CARD_WIDTH,
         backgroundColor: 'white',
         borderRadius: 12,
-        marginBottom: 20,
+        marginHorizontal: 4,
         shadowColor: '#000',
         shadowOffset: {
             width: 0,

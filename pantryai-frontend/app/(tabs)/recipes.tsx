@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';
 import { recipesApi, Recipe, RecipeResponse } from '../../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import OptionsModal from '../../components/OptionsModal';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const RECIPES_PER_PAGE = 10;
 const INITIAL_LOAD_COUNT = 30;
@@ -15,6 +16,7 @@ const STORAGE_KEY = '@pantryai_recipes_cache';
 
 const RecipesScreen: React.FC = () => {
     const router = useRouter();
+    const insets = useSafeAreaInsets();
     const [recipes, setRecipes] = useState<Recipe[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -314,36 +316,44 @@ const RecipesScreen: React.FC = () => {
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Recipes</Text>
                 <TouchableOpacity onPress={handleOptionsPress} style={styles.optionsButton}>
-                    <Ionicons name="options-outline" size={24} color="#333" />
+                    <Ionicons name="options-outline" size={24} color="#4CAF50" />
                 </TouchableOpacity>
             </View>
-
             <View style={styles.searchContainer}>
-                <View style={styles.searchInputContainer}>
-                    <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
-                    <TextInput
-                        style={styles.searchInput}
-                        placeholder="Search recipes..."
-                        value={searchQuery}
-                        onChangeText={handleSearch}
-                    />
-                    {searchQuery.length > 0 && (
-                        <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
-                            <Ionicons name="close-circle" size={20} color="#666" />
-                        </TouchableOpacity>
-                    )}
-                </View>
+                <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
+                <TextInput
+                    style={styles.searchInput}
+                    placeholder="Search recipes..."
+                    value={searchQuery}
+                    onChangeText={handleSearch}
+                />
+                {searchQuery.length > 0 && (
+                    <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
+                        <Ionicons name="close-circle" size={20} color="#666" />
+                    </TouchableOpacity>
+                )}
             </View>
-
-            {renderContent()}
+            <ScrollView 
+                style={styles.container}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={['#4CAF50']}
+                        tintColor="#4CAF50"
+                    />
+                }
+            >
+                {renderContent()}
+            </ScrollView>
             <OptionsModal
                 visible={showOptionsModal}
                 onClose={() => setShowOptionsModal(false)}
                 onViewModeChange={handleViewModeChange}
                 onSortChange={handleSortChange}
-                onReset={handleReset}
                 currentViewMode={viewMode}
                 currentSort={currentSort}
+                onReset={handleReset}
             />
         </SafeAreaView>
     );
@@ -356,32 +366,33 @@ const styles = StyleSheet.create({
     },
     container: {
         flex: 1,
-        backgroundColor: '#fff',
-        paddingTop: 50,
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: 20,
-        marginBottom: 20,
+        padding: 20,
+        backgroundColor: '#fff',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
     },
     headerTitle: {
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: 'bold',
+        color: '#333',
+    },
+    optionsButton: {
+        padding: 8,
     },
     searchContainer: {
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        backgroundColor: '#fff',
-    },
-    searchInputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#f0f0f0',
+        backgroundColor: '#f5f5f5',
         borderRadius: 8,
+        marginHorizontal: 20,
+        marginTop: 10,
         paddingHorizontal: 12,
-        paddingVertical: 6,
+        height: 40,
     },
     searchInput: {
         flex: 1,
@@ -479,9 +490,6 @@ const styles = StyleSheet.create({
     },
     listContainer: {
         flexDirection: 'column',
-    },
-    optionsButton: {
-        padding: 5,
     },
 });
 

@@ -22,6 +22,7 @@ import { useRouter } from 'expo-router';
 import { scanApi, pantryApi } from '../../services/api';
 import TextRecognition from 'react-native-text-recognition';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { Ionicons } from '@expo/vector-icons';
 
 import * as FileSystem from 'expo-file-system'; // needed to handle paths properly
@@ -41,8 +42,11 @@ export default function CameraScreen() {
   const [showItemModal, setShowItemModal] = useState(false);
   const [scannedItems, setScannedItems] = useState<any[]>([]);
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  
+  // DatePicker state
+  const [isDatePickerVisible, setDatePickerVisible] = useState(false);
   const [datePickerMode, setDatePickerMode] = useState<'expiry' | 'purchase'>('expiry');
+
 
   // while permissions are loading
   if (!permission) {
@@ -79,15 +83,13 @@ export default function CameraScreen() {
     try {
       setIsLoading(true);
       
-      // Remove any items that might have been skipped (they would have been filtered out)
       const itemsToAdd = scannedItems
         .filter(item => item.name && item.name.trim() !== '')
         .map(item => {
-          // Preserve all LLM-processed fields, only add defaults for missing required fields
           return {
             name: item.name,
             category: item.category || 'Uncategorized',
-            quantity: parseInt(String(item.quantity)) || 1, // Keep original logic for adding to pantry, as 0 qty might not be desirable there
+            quantity: parseInt(String(item.quantity)) || 1,
             unit: item.unit || '',
             expiry: item.expiry || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
             purchase_date: item.purchase_date || new Date().toISOString().split('T')[0],
@@ -126,8 +128,6 @@ export default function CameraScreen() {
       console.error('Error adding items to pantry:', error);
       if (error.response) {
         console.error('API error response:', error.response.data);
-        console.error('API error status:', error.response.status);
-        console.error('API error headers:', error.response.headers);
       }
       Alert.alert(
         'Error',
@@ -160,50 +160,40 @@ export default function CameraScreen() {
       setCurrentItemIndex(Math.max(0, updatedItems.length - 1));
     }
     if (updatedItems.length === 0) {
-      console.log('No items remaining, closing modal');
       setShowItemModal(false);
     }
   };
 
-  // Modify snapPhoto function
   const snapPhoto = async () => {
     if (!cameraRef.current) return;
     try {
-      console.log('Starting photo capture...');
       setIsLoading(true);
   
       const photo = await cameraRef.current.takePictureAsync({
         skipProcessing: true,
       });
-      console.log('Photo captured successfully:', photo.uri);
       
       const recognizedText = await TextRecognition.recognize(photo.uri);
-      console.log('OCR Results:', recognizedText);
   
       const parsedLines = recognizedText
         .map((line) => line.toLowerCase())
         .filter((line) => line.length > 1);
-      console.log('Filtered OCR lines:', parsedLines);
   
       const response = await scanApi.scanImage(parsedLines);
-      console.log('Scan API response:', JSON.stringify(response, null, 2));
       
       if (response.parsed_items.length === 0) {
-        console.log('No items detected in scan response');
         Alert.alert('No Items Found', 'No items were detected in the image. Please try again.');
         return;
       }
 
-      // Use the LLM-processed items directly from the API response
       const llmProcessedItems = response.parsed_items.map(item => {
         const parsedQuantity = parseInt(String(item.quantity));
-        // Use parsedQuantity if it's a number (including 0), otherwise default to 1.
         const quantityToUse = isNaN(parsedQuantity) ? 1 : parsedQuantity;
 
         return {
           name: item.name,
           category: item.category || 'Uncategorized',
-          quantity: quantityToUse, // Use the refined quantity
+          quantity: quantityToUse,
           unit: item.unit || '',
           expiry: item.expiry || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
           purchase_date: item.purchase_date || new Date().toISOString().split('T')[0],
@@ -216,7 +206,6 @@ export default function CameraScreen() {
         };
       });
 
-      console.log('LLM processed items for modal:', JSON.stringify(llmProcessedItems, null, 2));
       setScannedItems(llmProcessedItems);
       setCurrentItemIndex(0);
       setShowItemModal(true);
@@ -232,28 +221,32 @@ export default function CameraScreen() {
         [{ text: 'OK' }]
       );
     } finally {
-      console.log('snapPhoto finished');
       setIsLoading(false);
-    }
-  };
-
-  const handleDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      const updatedItems = [...scannedItems];
-      const currentItem = updatedItems[currentItemIndex];
-      if (datePickerMode === 'expiry') {
-        currentItem.expiry = selectedDate.toISOString().split('T')[0];
-      } else {
-        currentItem.purchase_date = selectedDate.toISOString().split('T')[0];
-      }
-      setScannedItems(updatedItems);
     }
   };
 
   const showDatePickerModal = (mode: 'expiry' | 'purchase') => {
     setDatePickerMode(mode);
-    setShowDatePicker(true);
+    setDatePickerVisible(true);
+  };
+
+  const handleDateConfirm = (date: Date) => {
+    const dateString = date.toISOString().split('T')[0];
+    const updatedItems = scannedItems.map((item, index) => {
+      if (index === currentItemIndex) {
+        return {
+          ...item,
+          [datePickerMode]: dateString,
+        };
+      }
+      return item;
+    });
+    setScannedItems(updatedItems);
+    setDatePickerVisible(false);
+  };
+
+  const handleDateCancel = () => {
+    setDatePickerVisible(false);
   };
 
   const renderItemModal = () => {
@@ -292,13 +285,16 @@ export default function CameraScreen() {
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.scrollView}>
+            <ScrollView 
+              style={styles.scrollView} 
+              contentContainerStyle={styles.scrollViewContent}
+            >
               <View style={styles.itemDetails}>
                 <View style={styles.inputGroup}>
                   <Text style={styles.inputLabel}>Name</Text>
                   <TextInput
                     style={styles.input}
-                    value={currentItem.name ?? ''} // Ensure string value
+                    value={currentItem.name ?? ''}
                     onChangeText={(value) => updateItemField('name', value)}
                     placeholder="Item name"
                   />
@@ -309,7 +305,7 @@ export default function CameraScreen() {
                     <Text style={styles.inputLabel}>Quantity</Text>
                     <TextInput
                       style={styles.input}
-                      value={String(currentItem.quantity ?? '')} // Ensure string value
+                      value={String(currentItem.quantity ?? '')}
                       onChangeText={(value) => updateItemField('quantity', value)}
                       keyboardType="numeric"
                       placeholder="1"
@@ -319,7 +315,7 @@ export default function CameraScreen() {
                     <Text style={styles.inputLabel}>Unit</Text>
                     <TextInput
                       style={styles.input}
-                      value={currentItem.unit ?? ''} // Ensure string value
+                      value={currentItem.unit ?? ''}
                       onChangeText={(value) => updateItemField('unit', value)}
                       placeholder="unit"
                     />
@@ -330,7 +326,7 @@ export default function CameraScreen() {
                   <Text style={styles.inputLabel}>Category</Text>
                   <TextInput
                     style={styles.input}
-                    value={currentItem.category ?? ''} // Ensure string value
+                    value={currentItem.category ?? ''}
                     onChangeText={(value) => updateItemField('category', value)}
                     placeholder="Category"
                   />
@@ -341,7 +337,10 @@ export default function CameraScreen() {
                     <Text style={styles.inputLabel}>Expiry Date</Text>
                     <TouchableOpacity
                       style={styles.dateInput}
-                      onPress={() => showDatePickerModal('expiry')}
+                      onPress={() => {
+                        console.log('Expiry date pressed');
+                        showDatePickerModal('expiry');
+                      }}
                     >
                       <Text style={styles.dateText}>
                         {currentItem.expiry ?? 'Select date'}
@@ -352,7 +351,10 @@ export default function CameraScreen() {
                     <Text style={styles.inputLabel}>Purchase Date</Text>
                     <TouchableOpacity
                       style={styles.dateInput}
-                      onPress={() => showDatePickerModal('purchase')}
+                      onPress={() => {
+                        console.log('Purchase date pressed');
+                        showDatePickerModal('purchase');
+                      }}
                     >
                       <Text style={styles.dateText}>
                         {currentItem.purchase_date ?? 'Select date'}
@@ -365,7 +367,7 @@ export default function CameraScreen() {
                   <Text style={styles.inputLabel}>Location</Text>
                   <TextInput
                     style={styles.input}
-                    value={currentItem.location ?? ''} // Ensure string value
+                    value={currentItem.location ?? ''}
                     onChangeText={(value) => updateItemField('location', value)}
                     placeholder="Pantry"
                   />
@@ -375,7 +377,7 @@ export default function CameraScreen() {
                   <Text style={styles.inputLabel}>Brand</Text>
                   <TextInput
                     style={styles.input}
-                    value={currentItem.brand ?? ''} // Ensure string value
+                    value={currentItem.brand ?? ''}
                     onChangeText={(value) => updateItemField('brand', value)}
                     placeholder="Brand (optional)"
                   />
@@ -385,7 +387,7 @@ export default function CameraScreen() {
                   <Text style={styles.inputLabel}>Notes</Text>
                   <TextInput
                     style={[styles.input, styles.notesInput]}
-                    value={currentItem.notes ?? ''} // Ensure string value
+                    value={currentItem.notes ?? ''}
                     onChangeText={(value) => updateItemField('notes', value)}
                     placeholder="Add any notes (optional)"
                     multiline
@@ -413,7 +415,7 @@ export default function CameraScreen() {
               )}
               
               <TouchableOpacity
-                style={[styles.modalButton, styles.nextButton]}
+                style={[styles.modalButton, styles.nextButton, { marginLeft: isFirstItem ? 0 : 12 }]}
                 onPress={handleNextItem}
               >
                 <Text style={styles.buttonText}>
@@ -421,17 +423,16 @@ export default function CameraScreen() {
                 </Text>
               </TouchableOpacity>
             </View>
+
+            <DateTimePickerModal
+              isVisible={isDatePickerVisible}
+              mode="date"
+              onConfirm={handleDateConfirm}
+              onCancel={handleDateCancel}
+              date={currentItem[datePickerMode] ? new Date(currentItem[datePickerMode] + 'T00:00:00') : new Date()}
+            />
           </View>
         </View>
-
-        {showDatePicker && (
-          <DateTimePicker
-            value={new Date(currentItem[datePickerMode] ? currentItem[datePickerMode] : Date.now())}
-            mode="date"
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            onChange={handleDateChange}
-          />
-        )}
       </Modal>
     );
   };
@@ -439,11 +440,12 @@ export default function CameraScreen() {
   return (
     <View style={styles.container}>
       <CameraView
-        style={styles.camera}
         ref={cameraRef}
+        style={styles.camera}
         facing={facing}
-      >
-        <View style={styles.overlay}>
+      />
+      <View style={styles.overlay}>
+        <View style={styles.controls}>
           <TouchableOpacity
             style={styles.button}
             onPress={toggleCameraFacing}
@@ -464,28 +466,46 @@ export default function CameraScreen() {
             )}
           </TouchableOpacity>
         </View>
-      </CameraView>
+      </View>
       {renderItemModal()}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  message: { textAlign: 'center', padding: 20, color: '#fff' },
+  container: {
+    flex: 1,
+    position: 'relative',
+  },
+  center: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center' 
+  },
+  message: { 
+    textAlign: 'center', 
+    padding: 20, 
+    color: '#fff' 
+  },
   permissionButton: {
     backgroundColor: '#1e90ff',
     padding: 12,
     borderRadius: 8,
     alignSelf: 'center',
   },
-  permissionText: { color: '#fff', fontWeight: 'bold' },
-  camera: { flex: 1 },
+  permissionText: { 
+    color: '#fff', 
+    fontWeight: 'bold' 
+  },
+  camera: {
+    flex: 1,
+  },
   overlay: {
     position: 'absolute',
     bottom: 40,
     width: '100%',
+  },
+  controls: {
     flexDirection: 'row',
     justifyContent: 'space-around',
   },
@@ -497,107 +517,126 @@ const styles = StyleSheet.create({
   buttonDisabled: {
     opacity: 0.5,
   },
-  text: { fontSize: 16, fontWeight: '600', color: '#000' },
+  text: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 1000,
   },
   modalContent: {
     backgroundColor: 'white',
     borderRadius: 20,
-    padding: 20,
-    paddingRight: 23,
-    width: '90%',
-    maxWidth: 400,
-    maxHeight: '80%',
+    width: '85%',
+    maxWidth: 380,
+    height: '65%',
+    display: 'flex',
+    flexDirection: 'column',
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    flexGrow: 1,
+    textAlign: 'center',
   },
   closeButton: {
-    padding: 5,
+    padding: 4,
+    flexShrink: 0,
   },
   scrollView: {
-    maxHeight: '70%',
+    flex: 1,
+  },
+  scrollViewContent: {
+    padding: 8,
+  },
+  itemDetails: {
+    gap: 6,
+    padding: 2, // Added padding on all edges as requested
   },
   inputGroup: {
-    marginBottom: 15,
+    marginBottom: 6,
   },
   inputLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 5,
-    fontWeight: '500',
+    fontSize: 13,
+    color: '#333',
+    marginBottom: 2,
+    fontWeight: '600',
   },
   input: {
     borderWidth: 1,
     borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
+    borderRadius: 6,
+    padding: 6,
+    fontSize: 15,
     backgroundColor: '#f9f9f9',
+    minHeight: 36,
   },
   notesInput: {
-    height: 80,
+    height: 50,
     textAlignVertical: 'top',
+    paddingTop: 6,
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'flex-start',
   },
   dateInput: {
     borderWidth: 1,
     borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: 6,
+    padding: 6,
     backgroundColor: '#f9f9f9',
+    minHeight: 36,
+    justifyContent: 'center',
   },
   dateText: {
     fontSize: 16,
     color: '#333',
   },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  itemDetails: {
-    marginBottom: 20,
-  },
   modalButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 20,
-    paddingTop: 15,
+    padding: 8,
     borderTopWidth: 1,
     borderTopColor: '#eee',
-    gap: 10,
   },
   modalButton: {
-    padding: 15,
-    borderRadius: 10,
-    minWidth: 100,
+    // Increased padding inside buttons as requested
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    minWidth: 70,
     alignItems: 'center',
     flex: 1,
   },
   skipButton: {
     backgroundColor: '#ff6b6b',
+    marginRight: 12,
   },
   previousButton: {
     backgroundColor: '#666',
+    marginRight: 12,
   },
   nextButton: {
     backgroundColor: '#4CAF50',
   },
   buttonText: {
     color: 'white',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
   },
 });
