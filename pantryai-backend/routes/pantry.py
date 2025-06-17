@@ -14,6 +14,62 @@ def list_pantry():
         logger.error("Error fetching pantry", exc_info=e)
         return jsonify(error=str(e)), 500
 
+@pantry_bp.route('/pantry/<item_id>', methods=['PUT'])
+def update_pantry_item(item_id):
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify(error="No data provided"), 400
+
+        # Validate and process dates if they exist
+        if 'expiry' in data:
+            try:
+                data['expiry'] = datetime.fromisoformat(data['expiry']).date().isoformat()
+            except ValueError:
+                return jsonify(error="Invalid expiry date format"), 400
+
+        if 'purchase_date' in data:
+            try:
+                data['purchase_date'] = datetime.fromisoformat(data['purchase_date']).date().isoformat()
+            except ValueError:
+                return jsonify(error="Invalid purchase date format"), 400
+
+        # Update the item
+        res = supabase.table('pantry').update(data).eq('id', item_id).execute()
+        
+        if not res.data:
+            return jsonify(error="Item not found"), 404
+            
+        return jsonify(res.data[0]), 200
+    except Exception as e:
+        logger.error(f"Error updating pantry item {item_id}", exc_info=e)
+        return jsonify(error=str(e)), 500
+
+@pantry_bp.route('/pantry/<item_id>', methods=['DELETE'])
+def delete_pantry_item(item_id):
+    try:
+        logger.info(f"Attempting to delete pantry item with ID: {item_id}")
+        
+        # First check if the item exists
+        check = supabase.table('pantry').select('id').eq('id', item_id).execute()
+        if not check.data:
+            logger.warning(f"Item not found for deletion: {item_id}")
+            return jsonify(error="Item not found"), 404
+
+        # Perform the deletion
+        res = supabase.table('pantry').delete().eq('id', item_id).execute()
+        
+        if not res.data:
+            logger.error(f"Deletion failed for item {item_id}: No data returned")
+            return jsonify(error="Failed to delete item"), 500
+            
+        logger.info(f"Successfully deleted item {item_id}")
+        return jsonify({"message": "Item deleted successfully", "deleted_id": item_id}), 200
+        
+    except Exception as e:
+        logger.error(f"Error deleting pantry item {item_id}", exc_info=e)
+        return jsonify(error=str(e)), 500
+
 @pantry_bp.route('/pantry/confirm-add', methods=['POST'])
 def confirm_add_items():
     """
@@ -103,3 +159,17 @@ def confirm_add_items():
     except Exception as e:
         logger.error("Supabase insert error during pantry confirmation", exc_info=e)
         return jsonify(error=f"Failed to add items to pantry: {e}"), 500
+
+@pantry_bp.route('/pantry/search', methods=['GET'])
+def search_pantry():
+    try:
+        query = request.args.get('query', '').strip()
+        if not query:
+            return jsonify([]), 200
+
+        # Search in the pantry table using case-insensitive contains
+        res = supabase.table('pantry').select('*').ilike('name', f'%{query}%').execute()
+        return jsonify(res.data), 200
+    except Exception as e:
+        logger.error("Error searching pantry", exc_info=e)
+        return jsonify(error=str(e)), 500

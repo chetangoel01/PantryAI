@@ -30,7 +30,7 @@ def scan_receipt():
                 return jsonify(error=f"Failed to parse receipt: {fallback_e}"), 500
 
         # Clean and enrich for display/preparation, but DO NOT INSERT YET
-        now = datetime.utcnow()
+        now = datetime.now(datetime.UTC)
         today = now.date().isoformat()
         iso_now = now.isoformat() + "Z" # Ensure ISO 8601 with Z for UTC
         formatted_for_frontend = []
