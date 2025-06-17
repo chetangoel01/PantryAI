@@ -76,11 +76,18 @@ const RecipesScreen: React.FC = () => {
                 setError('Invalid response from server');
             }
             setError(null);
-        } catch (err) {
-            console.error('Error fetching recipes:', err);
-            setError('Failed to load recipes. Please try again later.');
-            setRecipes([]);
-            setAllRecipes([]);
+        } catch (err: any) {
+            if (err.response?.data?.message === "Your pantry is empty. Please add items to get recipe suggestions.") {
+                // Handle empty pantry as a normal state, not an error
+                setRecipes([]);
+                setAllRecipes([]);
+                setError(null);
+            } else {
+                console.error('Error fetching recipes:', err);
+                setError('Failed to load recipes. Please try again later.');
+                setRecipes([]);
+                setAllRecipes([]);
+            }
         } finally {
             setLoading(false);
         }
@@ -245,8 +252,16 @@ const RecipesScreen: React.FC = () => {
             return (
                 <View style={styles.centerContainer}>
                     <Text style={styles.emptyText}>
-                        {isSearchActive ? 'No matching recipes found' : 'No recipes found'}
+                        {isSearchActive ? 'No matching recipes found' : 'Add items to your pantry to get recipe suggestions'}
                     </Text>
+                    {!isSearchActive && (
+                        <TouchableOpacity 
+                            style={[styles.retryButton, { marginTop: 15 }]} 
+                            onPress={() => router.push('/pantry')}
+                        >
+                            <Text style={styles.retryButtonText}>Go to Pantry</Text>
+                        </TouchableOpacity>
+                    )}
                 </View>
             );
         }

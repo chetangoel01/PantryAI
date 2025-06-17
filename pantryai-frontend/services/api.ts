@@ -150,6 +150,18 @@ export const recipesApi = {
             throw error;
         }
     },
+
+    searchRecipes: async (query: string): Promise<{ results: Recipe[] }> => {
+        try {
+            const response = await api.get('/recipes/search', {
+                params: { query },
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error searching recipes:', error);
+            throw error;
+        }
+    },
 };
 
 export const scanApi = {

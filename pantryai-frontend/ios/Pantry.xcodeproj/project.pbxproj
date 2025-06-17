@@ -7,29 +7,29 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		02673E522A08FD0E7F338989 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F0D2A0F0B52A5855BD7184A /* ExpoModulesProvider.swift */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		237D23F11E9F5FB66E6783E2 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 4A70427FC834A9395E5EB969 /* PrivacyInfo.xcprivacy */; };
+		37BA77517055C2A662E0112B /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57CCD49583CE3057CDC6CD85 /* ExpoModulesProvider.swift */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		5E4CB3053B032F4D5F2CBEDA /* libPods-pantryaifrontend.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F85A53FBAFBB647AD74CDEF6 /* libPods-pantryaifrontend.a */; };
-		8DBA1E2D4C8060FAE8653D54 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 0E7D351AABC3C510EEC18400 /* PrivacyInfo.xcprivacy */; };
+		8445986616C4E455468564D8 /* libPods-Pantry.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 78BF3C01693B003E1CAD0809 /* libPods-Pantry.a */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		0E7D351AABC3C510EEC18400 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = pantryaifrontend/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		13B07F961A680F5B00A75B9A /* pantryaifrontend.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = pantryaifrontend.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = pantryaifrontend/Images.xcassets; sourceTree = "<group>"; };
-		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = pantryaifrontend/Info.plist; sourceTree = "<group>"; };
-		3F0D2A0F0B52A5855BD7184A /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-pantryaifrontend/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		5F9732D1529266EA2A6B736D /* Pods-pantryaifrontend.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-pantryaifrontend.debug.xcconfig"; path = "Target Support Files/Pods-pantryaifrontend/Pods-pantryaifrontend.debug.xcconfig"; sourceTree = "<group>"; };
-		7ECC283B6DAED1D15DC4893C /* Pods-pantryaifrontend.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-pantryaifrontend.release.xcconfig"; path = "Target Support Files/Pods-pantryaifrontend/Pods-pantryaifrontend.release.xcconfig"; sourceTree = "<group>"; };
-		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = pantryaifrontend/SplashScreen.storyboard; sourceTree = "<group>"; };
+		13B07F961A680F5B00A75B9A /* Pantry.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pantry.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Pantry/Images.xcassets; sourceTree = "<group>"; };
+		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Pantry/Info.plist; sourceTree = "<group>"; };
+		4A70427FC834A9395E5EB969 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Pantry/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		4AB1BA17594446FECF20999C /* Pods-Pantry.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Pantry.debug.xcconfig"; path = "Target Support Files/Pods-Pantry/Pods-Pantry.debug.xcconfig"; sourceTree = "<group>"; };
+		57CCD49583CE3057CDC6CD85 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Pantry/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		78BF3C01693B003E1CAD0809 /* libPods-Pantry.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Pantry.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Pantry/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = pantryaifrontend/AppDelegate.swift; sourceTree = "<group>"; };
-		F11748442D0722820044C1D9 /* pantryaifrontend-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "pantryaifrontend-Bridging-Header.h"; path = "pantryaifrontend/pantryaifrontend-Bridging-Header.h"; sourceTree = "<group>"; };
-		F85A53FBAFBB647AD74CDEF6 /* libPods-pantryaifrontend.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-pantryaifrontend.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Pantry/AppDelegate.swift; sourceTree = "<group>"; };
+		F11748442D0722820044C1D9 /* Pantry-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "Pantry-Bridging-Header.h"; path = "Pantry/Pantry-Bridging-Header.h"; sourceTree = "<group>"; };
+		FE4E65813CDC404F0AB29D16 /* Pods-Pantry.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Pantry.release.xcconfig"; path = "Target Support Files/Pods-Pantry/Pods-Pantry.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,60 +37,52 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5E4CB3053B032F4D5F2CBEDA /* libPods-pantryaifrontend.a in Frameworks */,
+				8445986616C4E455468564D8 /* libPods-Pantry.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		0E70E357B1A6261B89B5389A /* pantryaifrontend */ = {
-			isa = PBXGroup;
-			children = (
-				3F0D2A0F0B52A5855BD7184A /* ExpoModulesProvider.swift */,
-			);
-			name = pantryaifrontend;
-			sourceTree = "<group>";
-		};
-		0FCE6716628B32D9144F1658 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				5F9732D1529266EA2A6B736D /* Pods-pantryaifrontend.debug.xcconfig */,
-				7ECC283B6DAED1D15DC4893C /* Pods-pantryaifrontend.release.xcconfig */,
-			);
-			name = Pods;
-			path = Pods;
-			sourceTree = "<group>";
-		};
-		13B07FAE1A68108700A75B9A /* pantryaifrontend */ = {
+		13B07FAE1A68108700A75B9A /* Pantry */ = {
 			isa = PBXGroup;
 			children = (
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
-				F11748442D0722820044C1D9 /* pantryaifrontend-Bridging-Header.h */,
+				F11748442D0722820044C1D9 /* Pantry-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				0E7D351AABC3C510EEC18400 /* PrivacyInfo.xcprivacy */,
+				4A70427FC834A9395E5EB969 /* PrivacyInfo.xcprivacy */,
 			);
-			name = pantryaifrontend;
+			name = Pantry;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				F85A53FBAFBB647AD74CDEF6 /* libPods-pantryaifrontend.a */,
+				78BF3C01693B003E1CAD0809 /* libPods-Pantry.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		646C55DF29C32C2B36C58F4C /* ExpoModulesProviders */ = {
+		810CEC28CB91CE04CC03C94D /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				0E70E357B1A6261B89B5389A /* pantryaifrontend */,
+				9976DFE18AE5D9DBDC6774F8 /* Pantry */,
 			);
 			name = ExpoModulesProviders;
+			sourceTree = "<group>";
+		};
+		82A408104DFDF4FC6C93B377 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				4AB1BA17594446FECF20999C /* Pods-Pantry.debug.xcconfig */,
+				FE4E65813CDC404F0AB29D16 /* Pods-Pantry.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -103,12 +95,12 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
-				13B07FAE1A68108700A75B9A /* pantryaifrontend */,
+				13B07FAE1A68108700A75B9A /* Pantry */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				0FCE6716628B32D9144F1658 /* Pods */,
-				646C55DF29C32C2B36C58F4C /* ExpoModulesProviders */,
+				82A408104DFDF4FC6C93B377 /* Pods */,
+				810CEC28CB91CE04CC03C94D /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -118,9 +110,17 @@
 		83CBBA001A601CBA00E9B192 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				13B07F961A680F5B00A75B9A /* pantryaifrontend.app */,
+				13B07F961A680F5B00A75B9A /* Pantry.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		9976DFE18AE5D9DBDC6774F8 /* Pantry */ = {
+			isa = PBXGroup;
+			children = (
+				57CCD49583CE3057CDC6CD85 /* ExpoModulesProvider.swift */,
+			);
+			name = Pantry;
 			sourceTree = "<group>";
 		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
@@ -129,32 +129,32 @@
 				BB2F792C24A3F905000567C9 /* Expo.plist */,
 			);
 			name = Supporting;
-			path = pantryaifrontend/Supporting;
+			path = Pantry/Supporting;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		13B07F861A680F5B00A75B9A /* pantryaifrontend */ = {
+		13B07F861A680F5B00A75B9A /* Pantry */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "pantryaifrontend" */;
+			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Pantry" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				6C2E51A1E91C0C91A82D4428 /* [Expo] Configure project */,
+				24C0CF096433CA81AE42CB88 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				F7B908D64B8A62196086EC5A /* [CP] Embed Pods Frameworks */,
+				E31A2F4893ECC26C2C5436FD /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = pantryaifrontend;
-			productName = pantryaifrontend;
-			productReference = 13B07F961A680F5B00A75B9A /* pantryaifrontend.app */;
+			name = Pantry;
+			productName = Pantry;
+			productReference = 13B07F961A680F5B00A75B9A /* Pantry.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -166,13 +166,13 @@
 				LastUpgradeCheck = 1130;
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
-						DevelopmentTeam = P48VDW72LU;
 						LastSwiftMigration = 1250;
+						DevelopmentTeam = "P48VDW72LU";
 						ProvisioningStyle = Automatic;
 					};
 				};
 			};
-			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "pantryaifrontend" */;
+			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "Pantry" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -185,7 +185,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				13B07F861A680F5B00A75B9A /* pantryaifrontend */,
+				13B07F861A680F5B00A75B9A /* Pantry */,
 			);
 		};
 /* End PBXProject section */
@@ -198,7 +198,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				8DBA1E2D4C8060FAE8653D54 /* PrivacyInfo.xcprivacy in Resources */,
+				237D23F11E9F5FB66E6783E2 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -235,14 +235,14 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-pantryaifrontend-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-Pantry-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		6C2E51A1E91C0C91A82D4428 /* [Expo] Configure project */ = {
+		24C0CF096433CA81AE42CB88 /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -259,7 +259,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-pantryaifrontend/expo-configure-project.sh\"\n";
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-Pantry/expo-configure-project.sh\"\n";
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -267,7 +267,7 @@
 			files = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-pantryaifrontend/Pods-pantryaifrontend-resources.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-Pantry/Pods-Pantry-resources.sh",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/ExpoConstants_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoFileSystem/ExpoFileSystem_privacy.bundle",
@@ -300,16 +300,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-pantryaifrontend/Pods-pantryaifrontend-resources.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Pantry/Pods-Pantry-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		F7B908D64B8A62196086EC5A /* [CP] Embed Pods Frameworks */ = {
+		E31A2F4893ECC26C2C5436FD /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-pantryaifrontend/Pods-pantryaifrontend-frameworks.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-Pantry/Pods-Pantry-frameworks.sh",
 				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
 			);
 			name = "[CP] Embed Pods Frameworks";
@@ -318,7 +318,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-pantryaifrontend/Pods-pantryaifrontend-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Pantry/Pods-Pantry-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -329,7 +329,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				02673E522A08FD0E7F338989 /* ExpoModulesProvider.swift in Sources */,
+				37BA77517055C2A662E0112B /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -338,21 +338,18 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 5F9732D1529266EA2A6B736D /* Pods-pantryaifrontend.debug.xcconfig */;
+			baseConfigurationReference = 4AB1BA17594446FECF20999C /* Pods-Pantry.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = pantryaifrontend/pantryaifrontend.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = Pantry/Pantry.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = P48VDW72LU;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"FB_SONARKIT_ENABLED=1",
 				);
-				INFOPLIST_FILE = pantryaifrontend/Info.plist;
+				INFOPLIST_FILE = Pantry/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -366,27 +363,27 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.anonymous.pantryai-frontend";
-				PRODUCT_NAME = pantryaifrontend;
-				SWIFT_OBJC_BRIDGING_HEADER = "pantryaifrontend/pantryaifrontend-Bridging-Header.h";
+				PRODUCT_NAME = Pantry;
+				SWIFT_OBJC_BRIDGING_HEADER = "Pantry/Pantry-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
+				DEVELOPMENT_TEAM = "P48VDW72LU";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 			};
 			name = Debug;
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 7ECC283B6DAED1D15DC4893C /* Pods-pantryaifrontend.release.xcconfig */;
+			baseConfigurationReference = FE4E65813CDC404F0AB29D16 /* Pods-Pantry.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = pantryaifrontend/pantryaifrontend.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = Pantry/Pantry.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = P48VDW72LU;
-				INFOPLIST_FILE = pantryaifrontend/Info.plist;
+				INFOPLIST_FILE = Pantry/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -400,11 +397,14 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.anonymous.pantryai-frontend";
-				PRODUCT_NAME = pantryaifrontend;
-				SWIFT_OBJC_BRIDGING_HEADER = "pantryaifrontend/pantryaifrontend-Bridging-Header.h";
+				PRODUCT_NAME = Pantry;
+				SWIFT_OBJC_BRIDGING_HEADER = "Pantry/Pantry-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
+				DEVELOPMENT_TEAM = "P48VDW72LU";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 			};
 			name = Release;
 		};
@@ -535,7 +535,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "pantryaifrontend" */ = {
+		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Pantry" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
@@ -544,7 +544,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "pantryaifrontend" */ = {
+		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "Pantry" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				83CBBA201A601CBA00E9B192 /* Debug */,

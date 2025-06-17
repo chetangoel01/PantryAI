@@ -27,6 +27,7 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="pantryaifrontend"/>
+        <data android:scheme="exp+pantryai-frontend"/>
       </intent-filter>
     </activity>
   </application>

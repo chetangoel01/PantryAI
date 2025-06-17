@@ -1,6 +1,6 @@
 // app/index.tsx
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Image, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Image, RefreshControl, TextInput, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { pantryApi, recipesApi, Recipe } from '../../services/api';
@@ -22,6 +22,10 @@ const HomeScreen: React.FC = () => {
     const [suggestedRecipes, setSuggestedRecipes] = useState<Recipe[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<Recipe[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchLoading, setSearchLoading] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -73,10 +77,50 @@ const HomeScreen: React.FC = () => {
         }
     };
 
+    const handleSearch = async (query: string) => {
+        setSearchQuery(query);
+        if (query.trim().length > 0) {
+            setSearchLoading(true);
+            try {
+                const response = await recipesApi.searchRecipes(query);
+                setSearchResults(response.results);
+                setIsSearching(true);
+            } catch (error) {
+                console.error('Error searching recipes:', error);
+                setSearchResults([]);
+            } finally {
+                setSearchLoading(false);
+            }
+        } else {
+            setSearchResults([]);
+            setIsSearching(false);
+        }
+    };
+
+    const clearSearch = () => {
+        setSearchQuery('');
+        setSearchResults([]);
+        setIsSearching(false);
+    };
+
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Welcome to PantryAI</Text>
+            </View>
+            <View style={styles.searchContainer}>
+                <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
+                <TextInput
+                    style={styles.searchInput}
+                    placeholder="Search recipes..."
+                    value={searchQuery}
+                    onChangeText={handleSearch}
+                />
+                {searchQuery.length > 0 && (
+                    <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
+                        <Ionicons name="close-circle" size={20} color="#666" />
+                    </TouchableOpacity>
+                )}
             </View>
             <ScrollView 
                 style={styles.container}
@@ -89,85 +133,131 @@ const HomeScreen: React.FC = () => {
                     />
                 }
             >
-                {/* Quick Actions */}
-                <View style={styles.quickActions}>
-                    <QuickActionCard
-                        icon="scan-outline"
-                        title="Scan Item"
-                        onPress={() => handleQuickAction('scan')}
-                    />
-                    <QuickActionCard
-                        icon="restaurant-outline"
-                        title="View Pantry"
-                        onPress={() => handleQuickAction('pantry')}
-                    />
-                    <QuickActionCard
-                        icon="book-outline"
-                        title="Recipes"
-                        onPress={() => handleQuickAction('recipes')}
-                    />
-                    <QuickActionCard
-                        icon="list-outline"
-                        title="Shopping Lists"
-                        onPress={() => handleQuickAction('lists')}
-                    />
-                </View>
-
-                {/* Pantry Stats */}
-                <View style={styles.statsCard}>
-                    <View style={styles.statsHeader}>
-                        <Ionicons name="stats-chart-outline" size={24} color="#4CAF50" />
-                        <Text style={styles.statsTitle}>Pantry Overview</Text>
-                    </View>
-                    <View style={styles.statsContent}>
-                        <View style={styles.statItem}>
-                            <Text style={styles.statNumber}>{pantryCount}</Text>
-                            <Text style={styles.statLabel}>Items in Pantry</Text>
+                {isSearching ? (
+                    <View style={styles.suggestedRecipes}>
+                        <View style={styles.sectionHeader}>
+                            <Text style={styles.sectionTitle}>Search Results</Text>
                         </View>
-                        <View style={styles.statItem}>
-                            <Text style={styles.statNumber}>
-                                {suggestedRecipes.length}
-                            </Text>
-                            <Text style={styles.statLabel}>Recipe Matches</Text>
-                        </View>
-                    </View>
-                </View>
-
-                {/* Suggested Recipes */}
-                <View style={styles.suggestedRecipes}>
-                    <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>Suggested Recipes</Text>
-                        <TouchableOpacity onPress={() => handleQuickAction('recipes')}>
-                            <Text style={styles.seeAllText}>See All</Text>
-                        </TouchableOpacity>
-                    </View>
-                    {suggestedRecipes.map((recipe) => (
-                        <TouchableOpacity
-                            key={recipe.id}
-                            style={styles.recipeCard}
-                            onPress={() => router.push({
-                                pathname: '/recipes/[recipeId]',
-                                params: { 
-                                    recipeId: recipe.id.toString(),
-                                    recipe: JSON.stringify(recipe)
-                                }
-                            })}
-                        >
-                            <Image
-                                source={recipe.image_url ? { uri: recipe.image_url } : require('../../assets/placeholder_recipe.jpg')}
-                                style={styles.recipeImage}
-                            />
-                            <View style={styles.recipeInfo}>
-                                <Text style={styles.recipeTitle} numberOfLines={1}>
-                                    {recipe.name}
-                                </Text>
-                                <Text style={styles.recipeDescription} numberOfLines={2}>
-                                    {recipe.description}
-                                </Text>
+                        {searchLoading ? (
+                            <View style={styles.centerContainer}>
+                                <ActivityIndicator size="large" color="#4CAF50" />
                             </View>
-                        </TouchableOpacity>
-                    ))}
-                </View>
+                        ) : searchResults.length > 0 ? (
+                            searchResults.map((recipe) => (
+                                <TouchableOpacity
+                                    key={recipe.id}
+                                    style={styles.recipeCard}
+                                    onPress={() => router.push({
+                                        pathname: '/recipes/[recipeId]',
+                                        params: { 
+                                            recipeId: recipe.id.toString(),
+                                            recipe: JSON.stringify(recipe)
+                                        }
+                                    })}
+                                >
+                                    <Image
+                                        source={recipe.image_url ? { uri: recipe.image_url } : require('../../assets/placeholder_recipe.jpg')}
+                                        style={styles.recipeImage}
+                                    />
+                                    <View style={styles.recipeInfo}>
+                                        <Text style={styles.recipeTitle} numberOfLines={1}>
+                                            {recipe.name}
+                                        </Text>
+                                        <Text style={styles.recipeDescription} numberOfLines={2}>
+                                            {recipe.description}
+                                        </Text>
+                                    </View>
+                                </TouchableOpacity>
+                            ))
+                        ) : (
+                            <View style={styles.centerContainer}>
+                                <Text style={styles.emptyText}>No recipes found</Text>
+                            </View>
+                        )}
+                    </View>
+                ) : (
+                    <>
+                        {/* Quick Actions */}
+                        <View style={styles.quickActions}>
+                            <QuickActionCard
+                                icon="scan-outline"
+                                title="Scan Item"
+                                onPress={() => handleQuickAction('scan')}
+                            />
+                            <QuickActionCard
+                                icon="restaurant-outline"
+                                title="View Pantry"
+                                onPress={() => handleQuickAction('pantry')}
+                            />
+                            <QuickActionCard
+                                icon="book-outline"
+                                title="Recipes"
+                                onPress={() => handleQuickAction('recipes')}
+                            />
+                            <QuickActionCard
+                                icon="list-outline"
+                                title="Shopping Lists"
+                                onPress={() => handleQuickAction('lists')}
+                            />
+                        </View>
+
+                        {/* Pantry Stats */}
+                        <View style={styles.statsCard}>
+                            <View style={styles.statsHeader}>
+                                <Ionicons name="stats-chart-outline" size={24} color="#4CAF50" />
+                                <Text style={styles.statsTitle}>Pantry Overview</Text>
+                            </View>
+                            <View style={styles.statsContent}>
+                                <View style={styles.statItem}>
+                                    <Text style={styles.statNumber}>{pantryCount}</Text>
+                                    <Text style={styles.statLabel}>Items in Pantry</Text>
+                                </View>
+                                <View style={styles.statItem}>
+                                    <Text style={styles.statNumber}>
+                                        {suggestedRecipes.length}
+                                    </Text>
+                                    <Text style={styles.statLabel}>Recipe Matches</Text>
+                                </View>
+                            </View>
+                        </View>
+
+                        {/* Suggested Recipes */}
+                        <View style={styles.suggestedRecipes}>
+                            <View style={styles.sectionHeader}>
+                                <Text style={styles.sectionTitle}>Suggested Recipes</Text>
+                                <TouchableOpacity onPress={() => handleQuickAction('recipes')}>
+                                    <Text style={styles.seeAllText}>See All</Text>
+                                </TouchableOpacity>
+                            </View>
+                            {suggestedRecipes.map((recipe) => (
+                                <TouchableOpacity
+                                    key={recipe.id}
+                                    style={styles.recipeCard}
+                                    onPress={() => router.push({
+                                        pathname: '/recipes/[recipeId]',
+                                        params: { 
+                                            recipeId: recipe.id.toString(),
+                                            recipe: JSON.stringify(recipe)
+                                        }
+                                    })}
+                                >
+                                    <Image
+                                        source={recipe.image_url ? { uri: recipe.image_url } : require('../../assets/placeholder_recipe.jpg')}
+                                        style={styles.recipeImage}
+                                    />
+                                    <View style={styles.recipeInfo}>
+                                        <Text style={styles.recipeTitle} numberOfLines={1}>
+                                            {recipe.name}
+                                        </Text>
+                                        <Text style={styles.recipeDescription} numberOfLines={2}>
+                                            {recipe.description}
+                                        </Text>
+                                    </View>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    </>
+                )}
             </ScrollView>
         </SafeAreaView>
     );
@@ -308,6 +398,40 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#666',
         lineHeight: 20,
+    },
+    searchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f5f5f5',
+        borderRadius: 8,
+        marginHorizontal: 20,
+        marginTop: 10,
+        paddingHorizontal: 12,
+        height: 40,
+    },
+    searchInput: {
+        flex: 1,
+        height: 36,
+        fontSize: 16,
+        color: '#333',
+        marginLeft: 8,
+    },
+    searchIcon: {
+        marginRight: 4,
+    },
+    clearButton: {
+        padding: 4,
+    },
+    centerContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    emptyText: {
+        fontSize: 16,
+        color: '#666',
+        textAlign: 'center',
     },
 });
 

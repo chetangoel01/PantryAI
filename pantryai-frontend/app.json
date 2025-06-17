@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "pantryai-frontend",
+    "name": "Pantry",
     "slug": "pantryai-frontend",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -10,12 +10,21 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.pantryai-frontend"
+      "bundleIdentifier": "com.anonymous.pantryai-frontend",
+      "infoPlist": {
+        "CFBundleDisplayName": "Pantry"
+      },
+      "icon": "./assets/images/icon.png",
+      "darkIcon": "./assets/images/dark-icon.png"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#ffffff"
+      },
+      "darkAdaptiveIcon": {
+        "foregroundImage": "./assets/images/dark-icon.png",
+        "backgroundColor": "#000000"
       },
       "edgeToEdgeEnabled": true,
       "permissions": [
@@ -43,8 +52,8 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
-          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone"
+          "cameraPermission": "Allow Pantry to access your camera",
+          "microphonePermission": "Allow Pantry to access your microphone"
         }
       ]
     ],
