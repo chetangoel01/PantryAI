@@ -2,7 +2,7 @@ services:
   api:
     build: .
     ports:
-      - "5001:5000"
+      - "5001:5001"
     environment:
       FLASK_DEBUG: "${FLASK_DEBUG}"
       GOOGLE_API_KEY: "${GOOGLE_API_KEY}"
