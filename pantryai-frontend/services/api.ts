@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { getDeviceId } from './getDeviceId';
 
-const API_BASE_URL = 'https://pantryai.onrender.com';
+const API_BASE_URL = 'https://pantryai.dragonchetan.com';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
