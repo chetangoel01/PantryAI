@@ -60,7 +60,7 @@ const RecipesScreen: React.FC = () => {
 
             // If no cache or cache is old, fetch from API
             const response: RecipeResponse = await recipesApi.matchRecipes(INITIAL_LOAD_COUNT);
-            
+            console.log('response', response);
             if (response?.matched_recipes) {
                 setRecipes(response.matched_recipes);
                 setAllRecipes(response.matched_recipes);

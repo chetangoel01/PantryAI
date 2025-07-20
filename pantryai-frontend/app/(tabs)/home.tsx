@@ -4,6 +4,7 @@ import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Ima
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { pantryApi, recipesApi, Recipe } from '../../services/api';
+import { logger } from '../../services/logger';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import 'react-native-get-random-values';
 
@@ -32,11 +33,13 @@ const HomeScreen: React.FC = () => {
     }, []);
 
     const onRefresh = React.useCallback(async () => {
+        logger.info('Refreshing home screen data');
         setRefreshing(true);
         try {
             await fetchData();
+            logger.info('Successfully refreshed home screen data');
         } catch (error) {
-            console.error('Error refreshing data:', error);
+            logger.error('Error refreshing data', error);
         } finally {
             setRefreshing(false);
         }
@@ -44,15 +47,17 @@ const HomeScreen: React.FC = () => {
 
     const fetchData = async () => {
         try {
+            logger.info('Fetching home screen data (pantry items and recipes)');
             setLoading(true);
             const [pantryItems, recipes] = await Promise.all([
                 pantryApi.getAllItems(),
                 recipesApi.matchRecipes(3)
             ]);
+            logger.info(`Successfully fetched home data: ${pantryItems?.length || 0} pantry items, ${recipes?.matched_recipes?.length || 0} recipes`);
             setPantryCount(pantryItems?.length || 0);
             setSuggestedRecipes(recipes?.matched_recipes || []);
         } catch (error) {
-            console.error('Error fetching data:', error);
+            logger.error('Error fetching home screen data', error);
             setPantryCount(0);
             setSuggestedRecipes([]);
         } finally {
@@ -80,13 +85,15 @@ const HomeScreen: React.FC = () => {
     const handleSearch = async (query: string) => {
         setSearchQuery(query);
         if (query.trim().length > 0) {
+            logger.info(`Searching recipes with query: ${query}`);
             setSearchLoading(true);
             try {
                 const response = await recipesApi.searchRecipes(query);
+                logger.info(`Found ${response.results?.length || 0} recipes for query: ${query}`);
                 setSearchResults(response.results);
                 setIsSearching(true);
             } catch (error) {
-                console.error('Error searching recipes:', error);
+                logger.error('Error searching recipes', error);
                 setSearchResults([]);
             } finally {
                 setSearchLoading(false);

@@ -4,6 +4,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { pantryApi, PantryItem } from '../../services/api';
+import { logger } from '../../services/logger';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -93,7 +94,10 @@ const PantryScreen: React.FC = () => {
         // Handle scanned items if they exist in params
         if (params.scannedItems) {
             try {
+                logger.info('Processing scanned items from params');
                 const scannedItems = JSON.parse(params.scannedItems as string) as PantryItem[];
+                logger.info(`Found ${scannedItems.length} scanned items`, scannedItems);
+                
                 Alert.alert(
                     'Scanned Items',
                     `Found ${scannedItems.length} items. Would you like to add them to your pantry?`,
@@ -106,11 +110,13 @@ const PantryScreen: React.FC = () => {
                             text: 'Add Items',
                             onPress: async () => {
                                 try {
+                                    logger.info('User confirmed adding scanned items to pantry');
                                     const result = await pantryApi.confirmAddItems(scannedItems);
+                                    logger.info(`Successfully added ${result.inserted?.length || 0} scanned items to pantry`);
                                     setItems(prevItems => [...prevItems, ...result.inserted]);
                                     Alert.alert('Success', 'Items added to pantry successfully!');
                                 } catch (error) {
-                                    console.error('Error adding scanned items:', error);
+                                    logger.error('Error adding scanned items to pantry', error);
                                     Alert.alert('Error', 'Failed to add items to pantry. Please try again.');
                                 }
                             },
@@ -118,19 +124,44 @@ const PantryScreen: React.FC = () => {
                     ]
                 );
             } catch (error) {
-                console.error('Error parsing scanned items:', error);
+                logger.error('Error parsing scanned items from params', error);
             }
         }
     }, [params.scannedItems]);
 
     const fetchItems = async () => {
         try {
+            logger.info('Starting to fetch pantry items');
             setLoading(true);
             setError(null);
             const data = await pantryApi.getAllItems();
+            logger.info(`Successfully fetched ${data.length} pantry items`);
             setItems(data);
-        } catch (err) {
-            console.error('Error fetching pantry items:', err);
+        } catch (err: any) {
+            logger.error('Error fetching pantry items', err);
+            
+            // Log detailed error information
+            if (err.response) {
+                logger.error('API Error Details', {
+                    status: err.response.status,
+                    statusText: err.response.statusText,
+                    data: err.response.data,
+                    url: err.response.config?.url,
+                    method: err.response.config?.method,
+                    headers: err.response.config?.headers
+                });
+            } else if (err.request) {
+                logger.error('Network Error', {
+                    message: err.message,
+                    request: err.request
+                });
+            } else {
+                logger.error('Other Error', {
+                    message: err.message,
+                    stack: err.stack
+                });
+            }
+            
             setError('Failed to load pantry items. Please try again.');
         } finally {
             setLoading(false);
@@ -138,11 +169,13 @@ const PantryScreen: React.FC = () => {
     };
 
     const onRefresh = React.useCallback(async () => {
+        logger.info('Refreshing pantry data');
         setRefreshing(true);
         try {
             await fetchItems();
+            logger.info('Successfully refreshed pantry data');
         } catch (error) {
-            console.error('Error refreshing data:', error);
+            logger.error('Error refreshing data', error);
         } finally {
             setRefreshing(false);
         }
@@ -150,11 +183,13 @@ const PantryScreen: React.FC = () => {
 
     const handleAddItem = async () => {
         if (!newItem.name || !newItem.quantity || !newItem.unit || !newItem.category) {
+            logger.warn('Add item validation failed', newItem);
             Alert.alert('Error', 'Please fill in all required fields');
             return;
         }
 
         try {
+            logger.info('Adding new item to pantry', newItem);
             const itemData: Omit<PantryItem, 'id'> = {
                 name: newItem.name,
                 quantity: parseFloat(newItem.quantity),
@@ -167,13 +202,17 @@ const PantryScreen: React.FC = () => {
                 expiry: expiry ? expiry.toISOString() : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
             };
 
+            logger.info('Item data prepared for API call', itemData);
             const addedItem = await pantryApi.addItem(itemData);
+            logger.info('Successfully added item to pantry', addedItem);
+            
             setItems(prevItems => [...prevItems, addedItem]);
             setShowAddModal(false);
             setNewItem({ name: '', quantity: '', unit: '', category: '' });
             setExpiry(null);
             Alert.alert('Success', 'Item added successfully');
         } catch (error) {
+            logger.error('Error adding item to pantry', error);
             Alert.alert('Error', 'Failed to add item. Please try again.');
         }
     };
@@ -182,8 +221,10 @@ const PantryScreen: React.FC = () => {
         if (!selectedItem) return;
 
         try {
-            // console.log('Updating item with ID:', selectedItem.id);
+            logger.info(`Updating pantry item`, { id: selectedItem.id, changes: editedItem });
             const updatedItem = await pantryApi.updateItem(selectedItem.id, editedItem);
+            logger.info('Successfully updated pantry item', updatedItem);
+            
             setItems(prevItems => 
                 prevItems.map(item => 
                     item.id === selectedItem.id ? updatedItem : item
@@ -194,7 +235,7 @@ const PantryScreen: React.FC = () => {
             setEditedItem({});
             Alert.alert('Success', 'Item updated successfully');
         } catch (error) {
-            console.error('Error updating item:', error);
+            logger.error('Error updating pantry item', error);
             Alert.alert('Error', 'Failed to update item. Please try again.');
         }
     };
@@ -215,14 +256,16 @@ const PantryScreen: React.FC = () => {
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            // console.log('Deleting item with ID:', selectedItem.id);
+                            logger.info(`Deleting pantry item`, { id: selectedItem.id, name: selectedItem.name });
                             await pantryApi.deleteItem(selectedItem.id);
+                            logger.info(`Successfully deleted pantry item ${selectedItem.id}`);
+                            
                             setItems(prevItems => prevItems.filter(item => item.id !== selectedItem.id));
                             setShowEditModal(false);
                             setSelectedItem(null);
                             Alert.alert('Success', 'Item deleted successfully');
                         } catch (error) {
-                            console.error('Error deleting item:', error);
+                            logger.error('Error deleting pantry item', error);
                             Alert.alert('Error', 'Failed to delete item. Please try again.');
                         }
                     }
