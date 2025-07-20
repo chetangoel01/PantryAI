@@ -6,6 +6,7 @@ from datetime import datetime, timedelta # Import these for date handling
 pantry_bp = Blueprint('pantry', __name__)
 
 def get_device_id():
+    logger.info(f"Request headers: {request.headers}")
     device_id = request.headers.get("X-Device-ID")
     if not device_id:
         raise ValueError("Missing X-Device-ID header")
@@ -16,6 +17,7 @@ def get_device_id():
 def list_pantry():
     try:
         device_id = get_device_id()
+        logger.info(f"Fetching pantry for device_id: {device_id}")
         res = supabase.table('pantry').select('*').eq('device_id', device_id).execute()
         return jsonify(res.data), 200
     except Exception as e:
