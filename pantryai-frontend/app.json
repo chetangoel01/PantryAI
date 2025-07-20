@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Pantry",
+    "name": "PantryAI",
     "slug": "pantryai-frontend",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.pantryai-frontend",
+      "bundleIdentifier": "com.dragonchetan.pantryai",
       "infoPlist": {
         "CFBundleDisplayName": "Pantry"
       },
@@ -31,7 +31,7 @@
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
-      "package": "com.anonymous.pantryaifrontend"
+      "package": "com.dragonchetan.pantryai"
     },
     "web": {
       "bundler": "metro",
