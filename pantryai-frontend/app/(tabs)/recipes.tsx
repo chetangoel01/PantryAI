@@ -406,6 +406,7 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         marginHorizontal: 20,
         marginTop: 10,
+        marginBottom: 15,
         paddingHorizontal: 12,
         height: 40,
     },
@@ -502,9 +503,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'space-between',
+        paddingHorizontal: 5,
     },
     listContainer: {
         flexDirection: 'column',
+        paddingHorizontal: 10,
     },
 });
 

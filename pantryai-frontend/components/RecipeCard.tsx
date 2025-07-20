@@ -79,6 +79,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
+        overflow: 'hidden',
     },
     gridCard: {
         width: '48%',
@@ -86,8 +87,8 @@ const styles = StyleSheet.create({
     },
     listCard: {
         flexDirection: 'row',
-        marginHorizontal: 20,
         marginBottom: 15,
+        width: '100%',
     },
     compactCard: {
         flexDirection: 'row',
@@ -108,6 +109,8 @@ const styles = StyleSheet.create({
         height: 120,
         borderTopLeftRadius: 12,
         borderBottomLeftRadius: 12,
+        borderTopRightRadius: 0,
+        borderBottomRightRadius: 0,
     },
     compactImage: {
         width: 60,
@@ -117,18 +120,21 @@ const styles = StyleSheet.create({
     content: {
         padding: 15,
         flex: 1,
+        justifyContent: 'space-between',
     },
     title: {
         fontSize: 18,
         fontWeight: '600',
         marginBottom: 10,
         color: '#333',
+        flex: 1,
     },
     difficultyBadge: {
         alignSelf: 'flex-start',
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 15,
+        marginTop: 5,
     },
     difficultyText: {
         color: 'white',
