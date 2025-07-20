@@ -7,13 +7,13 @@ import json
 
 recipes_bp = Blueprint('recipes', __name__)
 
-def get_pantry_items_text_for_embedding() -> str:
+def get_pantry_items_text_for_embedding(user_id: str) -> str:
     """
-    Fetches current pantry items from Supabase, cleans their names, and concatenates them
-    into a single string suitable for embedding.
+    Fetches current pantry items for a specific user from Supabase, cleans their names, 
+    and concatenates them into a single string suitable for embedding.
     """
     try:
-        res = supabase.table('pantry').select('name', 'quantity', 'unit').execute()
+        res = supabase.table('pantry').select('name', 'quantity', 'unit').eq('user_id', user_id).execute()
         pantry_items_data = res.data or []
 
         item_strings = []
@@ -42,8 +42,12 @@ def get_pantry_items_text_for_embedding() -> str:
 
 @recipes_bp.route('/recipes/match', methods=['GET'])
 def match_recipes_from_pantry():
+    user_id = request.args.get('user_id')
+    if not user_id:
+        return jsonify(error="user_id is required"), 400
+
     try:
-        pantry_text = get_pantry_items_text_for_embedding()
+        pantry_text = get_pantry_items_text_for_embedding(user_id)
         if not pantry_text:
             return jsonify(message="Your pantry is empty. Please add items to get recipe suggestions."), 200
 
