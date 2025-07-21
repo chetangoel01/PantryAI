@@ -20,7 +20,8 @@ import {
  from 'react-native';
 import { useRouter } from 'expo-router';
 import { scanApi, pantryApi } from '../../services/api';
-import TextRecognition from 'react-native-text-recognition';
+import * as ImageManipulator from 'expo-image-manipulator';
+import TextRecognition from '@react-native-ml-kit/text-recognition';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { Ionicons } from '@expo/vector-icons';
@@ -173,11 +174,40 @@ export default function CameraScreen() {
         skipProcessing: true,
       });
       
-      const recognizedText = await TextRecognition.recognize(photo.uri);
-  
-      const parsedLines = recognizedText
-        .map((line) => line.toLowerCase())
-        .filter((line) => line.length > 1);
+      // Process image for better OCR results
+      const processedImage = await ImageManipulator.manipulateAsync(
+        photo.uri,
+        [
+          { resize: { width: 1024 } }, // Resize for better processing
+        ],
+        { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
+      );
+
+      // Perform on-device OCR using ML Kit
+      const result = await TextRecognition.recognize(processedImage.uri);
+      
+      // Extract and clean text from OCR results
+      const allWords = result.blocks
+        .flatMap(block => block.lines)
+        .flatMap(line => line.text.split(' '))
+        .map(word => word.toLowerCase().trim())
+        .filter(word => word.length > 1);
+      
+      // Filter out common noise (prices, codes, etc.)
+      const filteredWords = allWords.filter(word => {
+        // Remove price patterns ($X.XX, $X, etc.)
+        if (/^\$[\d.,]+$/.test(word)) return false;
+        // Remove product codes (long numbers)
+        if (/^\d{6,}$/.test(word)) return false;
+        // Remove single letters
+        if (word.length === 1) return false;
+        // Remove common noise words
+        const noiseWords = ['fc', 'ea', 'off', 'saved', 'cartwheel', 'mp', 'fo', 'and', 'the', 'a', 'an'];
+        if (noiseWords.includes(word)) return false;
+        return true;
+      });
+      
+      const parsedLines = filteredWords;
   
       const response = await scanApi.scanImage(parsedLines);
       
