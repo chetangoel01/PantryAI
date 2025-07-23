@@ -52,9 +52,9 @@
       <true/>
     </dict>
     <key>NSCameraUsageDescription</key>
-    <string>Allow Pantry to access your camera</string>
+    <string>PantrySense uses your camera to scan barcodes, receipts and labels on food items, helping you track and organize your pantry.</string>
     <key>NSMicrophoneUsageDescription</key>
-    <string>Allow Pantry to access your microphone</string>
+    <string>PantrySense uses your microphone to scan barcodes and labels on food items, helping you track and organize your pantry.</string>
     <key>NSUserActivityTypes</key>
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>

@@ -61,19 +61,20 @@ export default function CameraScreen() {
   // if not yet granted, ask
   if (!permission.granted) {
     return (
-      <View style={styles.container}>
+      <View style={styles.center}>
         <Text style={styles.message}>
-          We need your permission to access the camera.
+          We will need access to your camera to scan pantry items, receipts and labels to automatically add them to your pantry.
         </Text>
         <TouchableOpacity
           style={styles.permissionButton}
           onPress={requestPermission}
         >
-          <Text style={styles.permissionText}>Grant Permission</Text>
+          <Text style={styles.permissionText}>Continue</Text>
         </TouchableOpacity>
       </View>
     );
   }
+
 
   // toggle front/back
   const toggleCameraFacing = () => {
@@ -515,7 +516,7 @@ const styles = StyleSheet.create({
   message: { 
     textAlign: 'center', 
     padding: 20, 
-    color: '#fff' 
+    color: '#000' 
   },
   permissionButton: {
     backgroundColor: '#1e90ff',
