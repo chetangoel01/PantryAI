@@ -196,21 +196,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Issues**: Report bugs on GitHub Issues
 - **Email**: support@pantryai.com
 
-## 🚧 Current Status
-
-### Development Phase
-- ✅ **Backend API**: Complete with recipe matching and pantry management
-- ✅ **Mobile App**: Core functionality implemented with React Native/Expo
-- ✅ **AI Integration**: Google AI for recipe recommendations
-- 🔄 **Testing**: Comprehensive test suite in progress
-- 🔄 **App Store Submission**: Preparing for review process
-
-### Roadmap
-- **Q1 2024**: Beta testing and bug fixes
-- **Q2 2024**: App Store submission and public release
-- **Q3 2024**: Advanced features and performance optimization
-- **Q4 2024**: Community features and integrations
-
 ## 🏆 Acknowledgments
 
 - Built with [Expo](https://expo.dev/) and [React Native](https://reactnative.dev/)
