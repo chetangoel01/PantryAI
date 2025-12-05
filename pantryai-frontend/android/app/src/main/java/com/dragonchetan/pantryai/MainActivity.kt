@@ -1,4 +1,4 @@
-package com.anonymous.pantryaifrontend
+package com.dragonchetan.pantryai
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

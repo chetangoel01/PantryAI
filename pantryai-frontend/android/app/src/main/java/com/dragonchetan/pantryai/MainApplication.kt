@@ -1,4 +1,4 @@
-package com.anonymous.pantryaifrontend
+package com.dragonchetan.pantryai
 
 import android.app.Application
 import android.content.res.Configuration
