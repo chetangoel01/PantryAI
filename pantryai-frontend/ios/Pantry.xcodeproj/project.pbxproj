@@ -389,8 +389,8 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.anonymous.pantryai-frontend";
-				PRODUCT_NAME = Pantry;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.dragonchetan.pantryai";
+				PRODUCT_NAME = "PantryAI";
 				SWIFT_OBJC_BRIDGING_HEADER = "Pantry/Pantry-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -423,8 +423,8 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.anonymous.pantryai-frontend";
-				PRODUCT_NAME = Pantry;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.dragonchetan.pantryai";
+				PRODUCT_NAME = "PantryAI";
 				SWIFT_OBJC_BRIDGING_HEADER = "Pantry/Pantry-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
