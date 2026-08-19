@@ -1,50 +1,211 @@
-# Welcome to your Expo app 👋
+# PantryAI Mobile App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+React Native mobile application for smart pantry management, built with Expo.
 
-## Get started
+## 🚀 Quick Start
 
-1. Install dependencies
+### Prerequisites
 
+- Node.js 18+ and npm
+- Expo CLI (`npm install -g @expo/cli`)
+- iOS Simulator (for iOS development) or Android Studio (for Android development)
+
+### Development Setup
+
+1. **Install dependencies**:
    ```bash
    npm install
    ```
 
-2. Start the app
-
+2. **Start the development server**:
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+3. **Run on device/simulator**:
+   - Press `i` for iOS Simulator
+   - Press `a` for Android Emulator
+   - Scan QR code with Expo Go app on your phone
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## 📱 App Features
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Core Functionality
 
-## Get a fresh project
+- **Pantry Management**: Track ingredients with expiration dates
+- **Recipe Discovery**: Get personalized recipe suggestions
+- **Barcode Scanning**: Quickly add items using camera
+- **Shopping Lists**: Generate smart shopping lists
+- **Expiration Alerts**: Never let food go to waste
 
-When you're ready, run:
+### Navigation
 
-```bash
-npm run reset-project
+The app uses file-based routing with the following main screens:
+
+- **Home** (`/`): Dashboard with quick actions
+- **Pantry** (`/pantry`): Manage your ingredients
+- **Recipes** (`/recipes`): Discover new recipes
+- **Camera** (`/camera`): Scan ingredients and barcodes
+- **Lists** (`/lists`): Shopping and todo lists
+
+## 🔧 Configuration
+
+### Environment Setup
+
+The app connects to the PantryAI backend API. Make sure the backend is running and update the API configuration in `services/api.ts` if needed.
+
+### API Configuration
+
+Update the API base URL in `services/api.ts`:
+
+```typescript
+const API_BASE_URL = 'http://localhost:5001'; // Development
+// const API_BASE_URL = 'https://your-production-api.com'; // Production
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## 🧪 Testing
 
-## Learn more
+### Linting
+```bash
+npm run lint
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+### Clear Async Storage (Development)
+```bash
+npm run clear-async-storage
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## 📦 Building for Production
 
-## Join the community
+### iOS Build
+```bash
+npm run build:ios
+```
 
-Join our community of developers creating universal apps.
+### Android Build
+```bash
+npm run build:android
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### Submit to App Stores
+```bash
+npm run submit:ios
+npm run submit:android
+```
+
+## 📁 Project Structure
+
+```
+app/
+├── _layout.tsx           # Root layout with navigation
+├── (tabs)/              # Tab-based navigation
+│   ├── _layout.tsx      # Tab layout
+│   ├── home.tsx         # Home dashboard
+│   ├── pantry.tsx       # Pantry management
+│   ├── recipes.tsx      # Recipe discovery
+│   ├── camera.tsx       # Camera/scanning
+│   └── lists.tsx        # Shopping lists
+├── pantry/              # Pantry-specific screens
+│   ├── [itemId].tsx     # Item details
+│   └── new.tsx          # Add new item
+└── recipes/             # Recipe-specific screens
+    └── [recipeId].tsx   # Recipe details
+
+components/               # Reusable components
+├── OptionsModal.tsx     # Modal components
+├── RecipeCard.tsx       # Recipe display cards
+├── SplashScreen.tsx     # Onboarding screens
+└── WelcomeScreen.tsx    # Welcome flow
+
+services/                # API and utilities
+├── api.ts              # API client
+├── getDeviceId.ts      # Device identification
+└── logger.ts           # Logging utilities
+
+assets/                  # Static assets
+├── images/             # App images and icons
+└── fonts/              # Custom fonts
+```
+
+## 🎨 UI/UX Features
+
+### Design System
+
+- **Colors**: Consistent color palette with light/dark mode support
+- **Typography**: Custom fonts and text styles
+- **Components**: Reusable UI components with consistent styling
+- **Animations**: Smooth transitions and micro-interactions
+
+### Onboarding Flow
+
+The app includes a comprehensive onboarding experience:
+- Welcome screen with app branding
+- Feature introduction slides
+- Smooth animated transitions
+- Skip functionality for returning users
+
+## 🔒 Security & Privacy
+
+### Data Protection
+
+- **Local Storage**: Sensitive data stored securely using AsyncStorage
+- **API Security**: All API calls use HTTPS
+- **User Privacy**: Minimal data collection, user-controlled sharing
+
+### Permissions
+
+The app requests the following permissions:
+- **Camera**: For scanning ingredients and barcodes
+- **Storage**: For saving images and data locally
+
+## 🚀 Performance Optimization
+
+### Best Practices
+
+- **Lazy Loading**: Components and screens load on demand
+- **Image Optimization**: Compressed images and lazy loading
+- **Memory Management**: Proper cleanup of resources
+- **Caching**: API responses cached for better performance
+
+### Bundle Optimization
+
+- **Tree Shaking**: Unused code removed from production builds
+- **Code Splitting**: Separate bundles for different app sections
+- **Asset Optimization**: Images and fonts optimized for mobile
+
+## 🐛 Debugging
+
+### Development Tools
+
+- **Expo DevTools**: Built-in debugging and inspection
+- **React Native Debugger**: Advanced debugging capabilities
+- **Flipper**: Plugin-based debugging platform
+
+### Common Issues
+
+1. **Metro bundler issues**: Clear cache with `npx expo start --clear`
+2. **iOS build errors**: Clean build folder and reinstall pods
+3. **Android build errors**: Clean gradle cache and rebuild
+
+## 📈 Analytics & Monitoring
+
+### Error Tracking
+
+- **Crash Reporting**: Automatic crash detection and reporting
+- **Performance Monitoring**: Track app performance metrics
+- **User Analytics**: Anonymous usage statistics
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Follow the existing code style
+4. Add tests for new functionality
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+---
+
+**Built with ❤️ using Expo and React Native**

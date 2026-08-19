@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.anonymous.pantryaifrontend'
+    namespace 'com.dragonchetan.pantryai'
     defaultConfig {
-        applicationId 'com.anonymous.pantryaifrontend'
+        applicationId 'com.dragonchetan.pantryai'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
