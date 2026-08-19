@@ -4,9 +4,11 @@ from routes.pantry import pantry_bp
 from routes.scan import scan_bp
 from utils.logger import logger
 from flask_cors import CORS
+from db import init_db
 
 app = Flask(__name__)
 CORS(app)
+init_db()
 
 # Register blueprints
 app.register_blueprint(recipes_bp)         # already /recipes/...

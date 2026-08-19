@@ -1,5 +1,5 @@
 import json
-from db import supabase
+from db import list_recipes, update_recipe
 from utils.logger import logger
 import time
 
@@ -15,8 +15,7 @@ def interactive_clean_ingredients():
 
     while True:
         try:
-            res = supabase.table('recipes').select('id', 'name', 'cleaned_ingredients_list').order('id').range(offset, offset + limit - 1).execute()
-            recipes_batch = res.data
+            recipes_batch = list_recipes(offset=offset, limit=limit)
 
             if not recipes_batch:
                 logger.info("No more recipes to process or reached end.")
@@ -54,11 +53,11 @@ def interactive_clean_ingredients():
                     confirm = input("Confirm update (y/N)? ").strip().lower()
                     if confirm == 'y':
                         try:
-                            update_res = supabase.table('recipes').update({'cleaned_ingredients_list': edited_list}).eq('id', recipe_id).execute()
-                            if update_res.data:
+                            updated = update_recipe(recipe_id, {'cleaned_ingredients_list': edited_list})
+                            if updated:
                                 logger.info(f"Successfully updated recipe ID {recipe_id}.")
-                            elif update_res.error:
-                                logger.error(f"Error updating recipe ID {recipe_id}: {update_res.error}")
+                            else:
+                                logger.error(f"Recipe ID {recipe_id} no longer exists.")
                         except Exception as e:
                             logger.error(f"General error during update for recipe ID {recipe_id}: {e}", exc_info=True)
                     else:
@@ -80,7 +79,4 @@ def interactive_clean_ingredients():
     logger.info("Interactive cleaning complete. All recipes processed.")
 
 if __name__ == "__main__":
-    # Ensure your .env has SUPABASE_URL and SUPABASE_KEY.
-    # Make sure you've already run the 'ALTER TABLE' step to add 'cleaned_ingredients_list' column.
-    # It's also recommended to have run the initial migration script at least once.
     interactive_clean_ingredients()

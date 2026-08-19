@@ -3,7 +3,7 @@ import faiss
 import numpy as np
 # Make sure parse_ingredient_name is imported from utils.embeddings
 from utils.embeddings import generate_text_embedding, create_recipe_text_for_embedding, parse_ingredient_name
-from db import supabase
+from db import upsert_recipes
 from utils.logger import logger
 import os
 import re
@@ -132,7 +132,7 @@ def ingest_recipes_and_build_index():
 
     # Ensure we have embeddings before proceeding
     if not embeddings:
-        logger.error("No valid embeddings generated. Cannot build FAISS index or insert into Supabase.")
+        logger.error("No valid embeddings generated. Cannot build FAISS index or update SQLite.")
         return
 
     # 2. Build FAISS index
@@ -148,28 +148,22 @@ def ingest_recipes_and_build_index():
         json.dump(faiss_idx_to_recipe_id_map, f)
     logger.info(f"FAISS ID map saved to {FAISS_ID_MAP_PATH}.")
 
-    # 3. Upsert into Supabase
-    logger.info(f"Attempting to insert {len(recipes_for_db)} recipes into Supabase 'recipes' table.")
+    # 3. Upsert into SQLite
+    logger.info(f"Attempting to insert {len(recipes_for_db)} recipes into the SQLite recipes table.")
     batch_size = 500
     for start in range(0, len(recipes_for_db), batch_size):
         batch = recipes_for_db[start:start + batch_size]
         try:
-            res = supabase.table('recipes').upsert(batch, on_conflict='id').execute()
-            if res.data:
-                logger.info(f"Successfully inserted/updated {len(res.data)} recipes (batch {start//batch_size + 1}).")
-            elif res.error:
-                logger.error(f"Supabase insertion/update error for batch {start//batch_size + 1}: {res.error}")
+            updated = upsert_recipes(batch)
+            logger.info(f"Successfully inserted/updated {len(updated)} recipes (batch {start//batch_size + 1}).")
         except Exception as e:
-            logger.error(f"General error during Supabase batch insertion/update {start//batch_size + 1}: {e}", exc_info=True)
+            logger.error(f"Database batch insertion/update failed for batch {start//batch_size + 1}: {e}", exc_info=True)
 
     logger.info("Recipe ingestion and FAISS index building complete.")
 
 
 if __name__ == "__main__":
     # BEFORE RUNNING THIS:
-    # 1. Ensure your .env file in pantryai-backend has SUPABASE_URL, SUPABASE_KEY, GOOGLE_API_KEY.
+    # 1. Ensure your .env file has GOOGLE_API_KEY and optionally DATABASE_PATH.
     # 2. Create a 'data' directory inside your pantryai-backend folder and place your JSON recipe files there.
-    # 3. ***MANUALLY*** run the following SQL command in your Supabase SQL Editor ONCE
-    #    to add the 'cleaned_ingredients_list' column to your 'recipes' table:
-    #    ALTER TABLE recipes ADD COLUMN cleaned_ingredients_list jsonb;
     ingest_recipes_and_build_index()

@@ -2,7 +2,6 @@
 
 from flask import Blueprint, request, jsonify
 from parsers import parse_receipt_google, parse_items
-from db import supabase
 from utils.logger import logger
 from datetime import datetime, timedelta, timezone
 

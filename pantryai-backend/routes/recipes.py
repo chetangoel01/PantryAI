@@ -1,7 +1,13 @@
 from flask import Blueprint, request, jsonify
 from recipes import match_recipes
 from utils.logger import logger
-from db import supabase  # To fetch pantry items
+from db import (
+    filter_recipes as filter_recipe_rows,
+    get_recipe as fetch_recipe,
+    pantry_summary,
+    recipes_containing_ingredients,
+    search_recipes as search_recipe_rows,
+)
 from utils.embeddings import generate_text_embedding, parse_ingredient_name
 import json
 
@@ -9,12 +15,11 @@ recipes_bp = Blueprint('recipes', __name__)
 
 def get_pantry_items_text_for_embedding(device_id: str) -> str:
     """
-    Fetches current pantry items for a specific device from Supabase, cleans their names, 
+    Fetches current pantry items for a specific device, cleans their names,
     and concatenates them into a single string suitable for embedding.
     """
     try:
-        res = supabase.table('pantry').select('name', 'quantity', 'unit').eq('device_id', device_id).execute()
-        pantry_items_data = res.data or []
+        pantry_items_data = pantry_summary(device_id)
 
         item_strings = []
         for item in pantry_items_data:
@@ -82,31 +87,15 @@ def search_recipes():
     try:
         if query:
             # Text-based search using ilike for case-insensitive partial matching
-            search_query = f"%{query}%"
-            res = (
-                supabase
-                .table('recipes')
-                .select('*')
-                .or_(f"name.ilike.{search_query},description.ilike.{search_query}")
-                .limit(20)
-                .execute()
-            )
-            logger.info(f"Found {len(res.data)} recipes matching query: {query}")
+            results = search_recipe_rows(query, limit=20)
+            logger.info(f"Found {len(results)} recipes matching query: {query}")
         else:
             # Ingredient-based search
             ingredients_list = [i.strip().lower() for i in ingredients.split(',') if i.strip()]
-            payload = json.dumps(ingredients_list)
-            res = (
-                supabase
-                .table('recipes')
-                .select('*')
-                .filter('cleaned_ingredients_list', 'cs', payload)
-                .limit(20)
-                .execute()
-            )
-            logger.info(f"Found {len(res.data)} recipes matching ingredients: {ingredients_list}")
+            results = recipes_containing_ingredients(ingredients_list, limit=20)
+            logger.info(f"Found {len(results)} recipes matching ingredients: {ingredients_list}")
 
-        return jsonify(results=res.data), 200
+        return jsonify(results=results), 200
 
     except Exception as e:
         logger.exception(f"Error searching recipes: {str(e)}")
@@ -124,32 +113,16 @@ def filter_recipes():
     logger.info(f"Filtering recipes with params: sort_by={sort_by}, sort_order={sort_order}, dietary={dietary}, cuisine={cuisine}, difficulty={difficulty}")
     
     try:
-        query = supabase.table('recipes').select('*')
-        
-        # Apply filters
-        if dietary:
-            query = query.eq('dietary_restrictions', dietary.lower())
-        if cuisine:
-            query = query.eq('cuisine', cuisine.lower())
-        if difficulty:
-            query = query.eq('difficulty', difficulty.lower())
-            
-        # Apply sorting
-        if sort_by == 'name':
-            query = query.order('name', desc=(sort_order == 'desc'))
-        elif sort_by == 'rating':
-            query = query.order('ratings', desc=(sort_order == 'desc'))
-        elif sort_by == 'time':
-            query = query.order('times->cook', desc=(sort_order == 'desc'))
-        elif sort_by == 'calories':
-            query = query.order('nutrients->calories', desc=(sort_order == 'desc'))
-            
-        # Execute query
-        logger.info("Executing Supabase query...")
-        res = query.limit(50).execute()
-        logger.info(f"Query returned {len(res.data)} results")
-        
-        return jsonify(results=res.data), 200
+        results = filter_recipe_rows(
+            dietary=dietary,
+            cuisine=cuisine,
+            difficulty=difficulty,
+            sort_by=sort_by,
+            descending=(sort_order == 'desc'),
+            limit=50,
+        )
+        logger.info(f"Query returned {len(results)} results")
+        return jsonify(results=results), 200
         
     except Exception as e:
         logger.exception(f"Error filtering recipes: {str(e)}")
@@ -161,21 +134,12 @@ def get_recipe(recipe_id):
     logger.info(f"Fetching recipe with ID: {recipe_id}")
     
     try:
-        res = (
-            supabase
-            .table('recipes')
-            .select('*')
-            .eq('id', recipe_id)
-            .single()
-            .execute()
-        )
-        
-        if not res.data:
+        recipe = fetch_recipe(recipe_id)
+        if not recipe:
             logger.warning(f"Recipe not found with ID: {recipe_id}")
             return jsonify(error="Recipe not found"), 404
-            
-        logger.info(f"Found recipe: {res.data['name']}")
-        return jsonify(recipe=res.data), 200
+        logger.info(f"Found recipe: {recipe['name']}")
+        return jsonify(recipe=recipe), 200
         
     except Exception as e:
         logger.exception(f"Error fetching recipe: {str(e)}")

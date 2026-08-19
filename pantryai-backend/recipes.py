@@ -2,7 +2,7 @@ import faiss
 import numpy as np
 from config import Config
 from utils.logger import logger
-from db import supabase
+from db import recipes_by_ids
 import json
 from utils.embeddings import generate_text_embedding # Also used to embed incoming pantry_vector
 
@@ -25,7 +25,7 @@ except Exception as e:
 
 def match_recipes(pantry_vector: list[float], k: int = 5) -> dict:
     """
-    Matches recipes based on the provided pantry vector using FAISS and fetches full recipe details from Supabase.
+    Matches recipes based on the provided pantry vector and fetches full recipe details.
     """
     if not index or index.ntotal == 0:
         logger.warning("FAISS index is not loaded or is empty. Cannot match recipes.")
@@ -60,13 +60,13 @@ def match_recipes(pantry_vector: list[float], k: int = 5) -> dict:
             logger.info("No valid recipe matches found by FAISS.")
             return {"matched_recipes": []}
 
-        # Fetch full recipe details from Supabase for the matched IDs
+        # Fetch full recipe details from SQLite for the matched IDs
         recipe_ids_to_fetch = [res['recipe_id'] for res in matched_results_minimal]
-        res = supabase.table('recipes').select('*').in_('id', recipe_ids_to_fetch).execute()
+        recipes = recipes_by_ids(recipe_ids_to_fetch)
 
-        if res.data:
+        if recipes:
             # Create a dictionary for quick lookup of fetched recipes by their ID
-            fetched_recipes_by_id = {recipe['id']: recipe for recipe in res.data}
+            fetched_recipes_by_id = {recipe['id']: recipe for recipe in recipes}
             final_recipes_with_scores = []
             for match in matched_results_minimal:
                 full_recipe = fetched_recipes_by_id.get(match['recipe_id'])
@@ -74,10 +74,10 @@ def match_recipes(pantry_vector: list[float], k: int = 5) -> dict:
                     # Combine the score with the full recipe data
                     full_recipe['score'] = match['score']
                     final_recipes_with_scores.append(full_recipe)
-            logger.info(f"Successfully fetched {len(final_recipes_with_scores)} full recipe details from Supabase.")
+            logger.info(f"Successfully fetched {len(final_recipes_with_scores)} full recipe details from SQLite.")
             return {"matched_recipes": final_recipes_with_scores}
         else:
-            logger.warning("No recipe details found in Supabase for the matched IDs. This might indicate a data inconsistency.")
+            logger.warning("No recipe details found for the matched IDs. This might indicate a data inconsistency.")
             return {"matched_recipes": []}
 
     except Exception as e:

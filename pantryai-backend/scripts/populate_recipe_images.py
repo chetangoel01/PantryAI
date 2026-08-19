@@ -11,7 +11,7 @@ import requests
 import asyncio
 import aiohttp
 from bs4 import BeautifulSoup
-from db import supabase
+from db import recipes_without_images, update_recipe
 from config import Config
 
 # ——— Pexels API setup ———
@@ -59,8 +59,7 @@ st.set_page_config(page_title="Recipe Image Auto-Populate", layout="wide")
 
 # Load recipes on first run
 if "recipes" not in st.session_state:
-    resp = supabase.table("recipes").select("id,name,url").is_("image_url", "null").execute()
-    st.session_state.recipes = resp.data or []
+    st.session_state.recipes = recipes_without_images()
     st.session_state.idx = 0
 
 recipes = st.session_state.recipes
@@ -107,9 +106,9 @@ if st.session_state.get("last_idx") != idx:
     if not img_url:
         st.warning(f"No image found for '{recipe['name']}', skipping.")
     else:
-        # Update in Supabase with try/except
+        # Update SQLite with try/except
         try:
-            supabase.table("recipes").update({"image_url": img_url}).eq("id", recipe["id"]).execute()
+            update_recipe(recipe["id"], {"image_url": img_url})
             st.success(f"{method} image applied: {img_url}")
             st.session_state.last_name = recipe["name"]
             st.session_state.last_method = method

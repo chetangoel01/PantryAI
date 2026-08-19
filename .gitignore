@@ -48,3 +48,6 @@ build/
 # VSCode debug history
 .history/
 node_modules/
+
+__pycache__/
+*.pyc

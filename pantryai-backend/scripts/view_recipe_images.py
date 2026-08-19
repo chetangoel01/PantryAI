@@ -6,15 +6,14 @@ if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
 import streamlit as st
-from db import supabase
+from db import recipes_with_images
 
 # ——— Streamlit UI ———
 st.set_page_config(page_title="Recipe Images Viewer", layout="wide")
 st.title("🍳 Recipe Images Gallery")
 
 # Fetch all recipes with images
-resp = supabase.table("recipes").select("id,name,image_url").not_.is_("image_url", "null").execute()
-recipes = resp.data or []
+recipes = recipes_with_images()
 
 if not recipes:
     st.warning("No recipes with images found!")
